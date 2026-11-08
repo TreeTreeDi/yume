@@ -37,6 +37,31 @@ function assertNodeSet(graph: unknown[], where: string): void {
   }
 }
 
+// The lead writes each analyzer's brief into one mapping entry; the brief names
+// its transcript path literally (see LEAD_TEMPLATE), so the brief text maps an
+// input file to the analyzer definition that processes it.
+function briefTexts(graph: unknown[]): string[] {
+  const out: string[] = [];
+  for (const entry of graph as Record<string, unknown>[]) {
+    if (entry.type === 'mapping') out.push(String(entry.mapConfig ?? ''));
+    if (entry.type === 'parallel') out.push(...briefTexts(entry.steps as unknown[]));
+  }
+  return out;
+}
+
+// The root runs each analyzer definition through one workflow entry; the run
+// records that entry's analyzer step result under the entry's id.
+function workflowEntries(graph: unknown[]): { id: string; workflowId: string }[] {
+  const out: { id: string; workflowId: string }[] = [];
+  for (const entry of graph as Record<string, unknown>[]) {
+    if (entry.type === 'workflow') {
+      out.push({ id: String(entry.id ?? ''), workflowId: String(entry.workflowId ?? '') });
+    }
+    if (entry.type === 'parallel') out.push(...workflowEntries(entry.steps as unknown[]));
+  }
+  return out;
+}
+
 export async function runDream(input: DreamInput): Promise<DreamReport> {
   const { transcriptPaths, memDir, workDir } = input;
   mkdirSync(memDir, { recursive: true });
@@ -45,13 +70,13 @@ export async function runDream(input: DreamInput): Promise<DreamReport> {
   // Transcripts render to plain text for the analyzers (upstream renders exports to text).
   const textDir = join(workDir, 'transcripts');
   mkdirSync(textDir, { recursive: true });
-  const rendered: { source: string; text: string }[] = [];
+  const rendered: { path: string; source: string; text: string }[] = [];
   for (const p of transcriptPaths) {
     const s = loadTranscript(p);
     const text = renderTranscript(s);
     const out = join(textDir, `${s.id || basename(p, '.jsonl')}.txt`);
     writeFileSync(out, text);
-    rendered.push({ source: out, text });
+    rendered.push({ path: p, source: out, text });
   }
 
   // A run saves a copy of the store's files first (upstream: run saves a copy before writing).
@@ -90,6 +115,10 @@ export async function runDream(input: DreamInput): Promise<DreamReport> {
   const run = await mastra.getWorkflow('dream-root').createRun();
   const result = await run.start({ inputData: { memDir } });
 
+  // Honest accounting (upstream report semantics): inputs_processed counts the
+  // analyzer step results the run actually returned, and an input the plan never
+  // names in an analyzer brief becomes a failure instead of a silent pass.
+  const steps = (result as { steps?: Record<string, { status?: string; output?: unknown; error?: unknown }> }).steps ?? {};
   const report: DreamReport = {
     inputs_expected: transcriptPaths.length,
     inputs_processed: 0,
@@ -99,22 +128,39 @@ export async function runDream(input: DreamInput): Promise<DreamReport> {
     changes: [],
   };
 
+  const analyzerBriefs = plan.definitions
+    .filter((d) => d.id !== root.id)
+    .map((d) => ({ id: d.id, brief: briefTexts(d.graph).join('\n') }));
+  const rootWorkflowSteps = workflowEntries(root.graph);
+
+  for (const r of rendered) {
+    const stepIds = analyzerBriefs
+      .filter((b) => b.brief.includes(r.source))
+      .flatMap((b) => rootWorkflowSteps.filter((e) => e.workflowId === b.id).map((e) => e.id));
+    if (stepIds.length === 0) {
+      report.failures.push({
+        input: r.path,
+        reason: `lead plan omits this input: no analyzer brief names ${r.source}`,
+      });
+      continue;
+    }
+    const analyzerSteps = stepIds.map((id) => steps[id]);
+    if (analyzerSteps.some((s) => s && s.status === 'success' && s.output != null)) {
+      report.inputs_processed++;
+    } else {
+      const err = analyzerSteps.map((s) => s?.error).find((e) => e != null);
+      report.failures.push({
+        input: r.path,
+        reason: err ? String((err as Error).message ?? err) : 'analyzer returned no result',
+      });
+    }
+  }
+
   if (result.status === 'success') {
     const out = result.result as { index_entries?: number; changes?: string[] };
     report.organized = true;
     report.index_entries = out.index_entries ?? null;
     report.changes = out.changes ?? [];
-    report.inputs_processed = transcriptPaths.length;
-  } else {
-    // A failed analyzer is recorded with its reason and does not stop the run upstream;
-    // here the run result carries per-step status.
-    const steps = (result as { steps?: Record<string, { status?: string; error?: unknown }> }).steps ?? {};
-    for (const [id, step] of Object.entries(steps)) {
-      if (step.status === 'failed') {
-        report.failures.push({ input: id, reason: String((step.error as Error)?.message ?? step.error) });
-      }
-    }
-    report.inputs_processed = transcriptPaths.length - report.failures.length;
   }
 
   writeFileSync(join(workDir, 'dream-report.json'), JSON.stringify(report, null, 2));

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dream": "tsx src/cli/dream.ts",
-    "assert": "tsx test/assertions.ts"
+    "assert": "tsx test/assertions.ts",
+    "test:parsers": "tsx test/parsers.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.87",

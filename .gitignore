@@ -5,3 +5,5 @@ data/runs/
 data/memory/
 *.log
 wiki/
+yume.db-shm
+yume.db-wal

@@ -23,25 +23,43 @@ npm install
 export OPENAI_BASE_URL=http://127.0.0.1:3425/v1
 export OPENAI_API_KEY=magpie
 
-# 实践轨：对 fixture 跑完整 dream
+# 实践轨：对三个 pi fixture 跑完整 dream
 npm run dream -- \
   test/fixtures/pi-01-stale-fact.jsonl \
   test/fixtures/pi-02-buried-detail.jsonl \
   test/fixtures/pi-03-overlap-conflict.jsonl \
-  test/fixtures/codex-01-release-process.jsonl \
   --memory data/memory --work data/runs/latest
 
 # 测试轨：对照断言
 npm run assert -- data/memory data/runs/latest/dream-report.json
+
+# codex 解析检查（codex fixture 不进 dream，单测解析）
+npm run test:parsers
 ```
 
 ## Demo 输出
 
-最近一次完整运行（四个模拟 session，覆盖上游三个难点：事实过时、细节埋藏、主题重叠含冲突）：
+最近一次完整运行（三个模拟 session，覆盖上游三个难点：事实过时、细节埋藏、主题重叠含冲突）：
 
 ```
-PASS  all transcripts analyzed  —  processed 4/4, failures 0
-PASS  index complete  —  6 live files, 0 missing from _index.md
+{
+  "inputs_expected": 3,
+  "inputs_processed": 3,
+  "failures": [],
+  "organized": true,
+  "index_entries": 5,
+  "changes": [
+    "merged tidewick-tests into tidewick-test-suite preserving all fact and verification lines",
+    "retired tidewick-tests as stub MOVED TO [[tidewick-test-suite]]",
+    "updated tidewick-test-suite frontmatter description to cover merged verification/staleness scope",
+    "repointed [[tidewick-tests]] links in tidewick-project.md to tidewick-test-suite",
+    "removed tidewick-tests entry and expanded tidewick-test-suite entry in _index.md",
+    "verified no conflicts, secrets, prompt-injection, oversize files, or missing frontmatter remained"
+  ]
+}
+
+PASS  all transcripts analyzed  —  processed 3/3, failures 0
+PASS  index complete  —  5 live files, 0 missing from _index.md
 PASS  facts carry provenance  —  found dated or source-marked lines: true
 PASS  no duplicate slugs  —  duplicates: []
 PASS  conflict retained  —  CONFLICT marker present or both conflicting claims kept
@@ -49,6 +67,8 @@ PASS  stale fact superseded  —  TIDEWICK_DATA_DIR present together with a supe
 PASS  frontmatter and size  —  0 without frontmatter, 0 over 100KB
 
 7/7 passed
+
+PASS  codex parser  —  8 events: assistant, tool_call, tool_result, user
 ```
 
 记忆库示例见 `data/memory/`（不入库）。运行记录与 dream 报告在 `data/runs/`（不入库）。
@@ -56,8 +76,9 @@ PASS  frontmatter and size  —  0 without frontmatter, 0 over 100KB
 ## 目录
 
 - `src/transcripts/`：pi 与 codex JSONL 解析，渲染为上游风格纯文本 transcript。
-- `src/prompts.ts`：上游 Lead、Analyzer、Organizer prompt 移植。行为保持，路径适配。
+- `src/prompts.ts`：上游 Lead、Analyzer、Organizer prompt 移植。逐条规则对照见 `docs/prompt-fidelity.md`。
 - `src/tools.ts`：记忆文件工具。写与编辑只进记忆目录。
 - `src/mastra.ts`：Mastra 装配。三个 agent 与 LibSQL 存储。
-- `src/dream.ts`：dream 执行器。渲染、备份、计划校验、注册运行。
+- `src/dream.ts`：dream 执行器。渲染、备份、计划校验、注册运行，dream-report 按 run 的 analyzer step 结果计数。
 - `test/assertions.ts`：对照断言。测试轨与实践轨分轨，结果互为对照。
+- `test/parsers.ts`：codex 解析检查。codex fixture 经 `src/transcripts/load.ts` 产出 user/assistant/tool 事件。
