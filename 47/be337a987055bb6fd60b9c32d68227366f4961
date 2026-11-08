@@ -1,0 +1,19 @@
+README.md
+  s_c4e80bf4808016::t_27760d51de9bd5 3,8-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "47be337a987055bb6fd60b9c32d68227366f4961",
+  "prompts": {},
+  "sessions": {
+    "s_c4e80bf4808016": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1ba9b-3095-74e3-a377-90703f310c13",
+        "model": "mimo-v2.6-pro"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
