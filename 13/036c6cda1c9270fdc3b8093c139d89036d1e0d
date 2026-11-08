@@ -1,0 +1,59 @@
+src/transcripts/types.ts
+  s_c4e80bf4808016::t_7163ec27a0de99 1-54
+src/transcripts/pi.ts
+  s_c4e80bf4808016::t_fcb5c4c74ed2c6 1-51
+src/transcripts/codex.ts
+  s_c4e80bf4808016::t_21578e2fde32b0 1-56
+src/transcripts/load.ts
+  s_c4e80bf4808016::t_81b15f7dec9c47 1-12
+src/cli/dream.ts
+  s_c4e80bf4808016::t_8f744ec4a638c4 1-25
+test/assertions.ts
+  s_c4e80bf4808016::t_760361323385f7 1-101
+src/prompts.ts
+  s_c4e80bf4808016::t_3a79cc30fd7b65 1-96
+src/dream.ts
+  s_c4e80bf4808016::t_861074842b744e 1-129
+src/tools.ts
+  s_c4e80bf4808016::t_c6d642f6078aa1 1-120
+  s_c4e80bf4808016::t_7357c95021f243 121-123
+src/mastra.ts
+  s_c4e80bf4808016::t_b3cdde83a21027 1-56
+  s_c4e80bf4808016::t_4e5fd673b89350 57-59
+.gitignore
+  s_c4e80bf4808016::t_ea71ae83dadcc1 1-7
+package-lock.json
+  s_804b642c7579ec::t_079d6d1cc7c4c1 1-3040
+package.json
+  s_804b642c7579ec::t_bcae73de78787f 1-24
+test/fixtures/pi-02-buried-detail.jsonl
+  s_c4e80bf4808016::t_c4c79445cb02aa 1-4
+test/fixtures/pi-03-overlap-conflict.jsonl
+  s_c4e80bf4808016::t_dcf778af909df3 1-6
+tsconfig.json
+  s_c4e80bf4808016::t_73df2f41d68842 1-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "13036c6cda1c9270fdc3b8093c139d89036d1e0d",
+  "prompts": {},
+  "sessions": {
+    "s_804b642c7579ec": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1bbd6-d01c-74ee-8464-c1f9489623f4",
+        "model": "deepseek-v4.1-flash-1017"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    },
+    "s_c4e80bf4808016": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1ba9b-3095-74e3-a377-90703f310c13",
+        "model": "mimo-v2.6-pro"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
