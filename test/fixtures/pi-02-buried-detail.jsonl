@@ -1,0 +1,4 @@
+{"type": "session", "version": 3, "id": "sess-fixture-02", "timestamp": "2026-10-01T10:00:00.000Z", "cwd": "/proj/tidewick"}
+{"type": "message", "id": "m1", "parentId": null, "timestamp": "2026-10-01T10:01:00.000Z", "message": {"role": "user", "content": [{"type": "text", "text": "How do I add a station?"}]}}
+{"type": "message", "id": "m2", "parentId": null, "timestamp": "2026-10-01T10:01:00.000Z", "message": {"role": "toolResult", "toolName": "bash", "isError": false, "content": [{"type": "text", "text": "$ python tools/make_fixtures.py --station ab --units m --out data/fixtures/ab.json\nwrote data/fixtures/ab.json (2 records)\narg order matters: --station before --units"}]}}
+{"type": "message", "id": "m3", "parentId": null, "timestamp": "2026-10-01T10:01:00.000Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Added station ab with tools/make_fixtures.py --station ab --units m --out data/fixtures/ab.json."}]}}

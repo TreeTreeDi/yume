@@ -1,0 +1,7 @@
+node_modules/
+dist/
+yume.db
+data/runs/
+data/memory/
+*.log
+wiki/
