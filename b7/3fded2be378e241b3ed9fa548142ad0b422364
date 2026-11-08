@@ -1,0 +1,19 @@
+README.md
+  s_ce7ab9dd032d47::t_b629f058e8c27f 1-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b73fded2be378e241b3ed9fa548142ad0b422364",
+  "prompts": {},
+  "sessions": {
+    "s_ce7ab9dd032d47": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "agent-78d1ce72-4d4f-459e-9e54-a6af5e3c4c8b",
+        "model": "unknown"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
