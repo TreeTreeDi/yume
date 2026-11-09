@@ -30,6 +30,33 @@ export function setToolActivity(hooks: {
   onMemoryChange = hooks?.onMemoryChange ?? null;
 }
 
+// Per-run write quota (one shared counter for write and edit): a run that
+// rewrites memory without bound is a runaway, so the tools refuse writes past
+// the named limit instead of silently continuing. Only mutations that actually
+// land consume the quota; refused paths and failed validations do not.
+// The counter resets at the start of each run (see resetWriteQuota, called
+// from the run entry point).
+export const MAX_WRITES_PER_RUN = 100;
+
+let writesThisRun = 0;
+
+export function resetWriteQuota(): void {
+  writesThisRun = 0;
+}
+
+export function writeQuotaUsage(): { used: number; quota: number } {
+  return { used: writesThisRun, quota: MAX_WRITES_PER_RUN };
+}
+
+function consumeWriteQuota(): void {
+  if (writesThisRun >= MAX_WRITES_PER_RUN) {
+    throw new Error(
+      `memory write quota exceeded: quota is ${MAX_WRITES_PER_RUN} writes per run, already used ${writesThisRun}; start a new run to reset the counter`,
+    );
+  }
+  writesThisRun++;
+}
+
 function inside(root: string, p: string): boolean {
   const abs = resolve(p);
   return abs === root || abs.startsWith(root + '/');
@@ -60,6 +87,27 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
+export function writeMemoryFile(path: string, content: string): { path: string; bytes: number } {
+  const abs = requireMemFile(resolve(memRoot, path));
+  consumeWriteQuota();
+  mkdirSync(dirname(abs), { recursive: true });
+  writeFileSync(abs, content);
+  onMemoryChange?.();
+  return { path: abs, bytes: content.length };
+}
+
+export function editMemoryFile(path: string, oldText: string, newText: string): { path: string } {
+  const abs = requireMemFile(resolve(memRoot, path));
+  const text = readFileSync(abs, 'utf8');
+  if (!text.includes(oldText)) {
+    throw new Error(`oldText not found in ${path}; re-read the file before editing`);
+  }
+  consumeWriteQuota();
+  writeFileSync(abs, text.replace(oldText, newText));
+  onMemoryChange?.();
+  return { path: abs };
+}
+
 export const readTool = createTool({
   id: 'read',
   description: 'Read a file. Allowed for the memory directory and assigned transcript files.',
@@ -75,31 +123,18 @@ export const readTool = createTool({
 
 export const writeTool = createTool({
   id: 'write',
-  description: 'Write a Markdown memory file inside the memory directory. Creates parent directories.',
+  description:
+    'Write a Markdown memory file inside the memory directory. Creates parent directories. Shares a per-run quota with edit (MAX_WRITES_PER_RUN writes per run).',
   inputSchema: z.object({ path: z.string(), content: z.string() }),
-  execute: async ({ path, content }) => {
-    const abs = requireMemFile(resolve(memRoot, path));
-    mkdirSync(dirname(abs), { recursive: true });
-    writeFileSync(abs, content);
-    onMemoryChange?.();
-    return { path: abs, bytes: content.length };
-  },
+  execute: async ({ path, content }) => writeMemoryFile(path, content),
 });
 
 export const editTool = createTool({
   id: 'edit',
-  description: 'Replace one exact string in a memory file. Refuses if the old text is absent.',
+  description:
+    'Replace one exact string in a memory file. Refuses if the old text is absent. Shares a per-run quota with write (MAX_WRITES_PER_RUN writes per run).',
   inputSchema: z.object({ path: z.string(), oldText: z.string(), newText: z.string() }),
-  execute: async ({ path, oldText, newText }) => {
-    const abs = requireMemFile(resolve(memRoot, path));
-    const text = readFileSync(abs, 'utf8');
-    if (!text.includes(oldText)) {
-      throw new Error(`oldText not found in ${path}; re-read the file before editing`);
-    }
-    writeFileSync(abs, text.replace(oldText, newText));
-    onMemoryChange?.();
-    return { path: abs };
-  },
+  execute: async ({ path, oldText, newText }) => editMemoryFile(path, oldText, newText),
 });
 
 function globToRegExp(pattern: string): RegExp {

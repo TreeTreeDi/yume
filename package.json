@@ -9,7 +9,8 @@
     "assert": "tsx test/assertions.ts",
     "test:parsers": "tsx test/parsers.ts",
     "test:tui": "tsx test/tui.ts",
-    "test:since": "tsx test/since.ts"
+    "test:since": "tsx test/since.ts",
+    "test:tools": "tsx test/tools.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.87",
