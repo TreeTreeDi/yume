@@ -37,6 +37,18 @@ function assertNodeSet(graph: unknown[], where: string): void {
   }
 }
 
+// The gateway accepts response_format but does not enforce it, so a step can
+// drift to prose and miss its final object; retries re-run the step and absorb
+// that transient drift instead of weakening upstream's strict object contract.
+function setAgentRetries(graph: unknown[]): void {
+  for (const entry of graph as Record<string, unknown>[]) {
+    if (entry.type === 'agent') {
+      entry.options = { ...(entry.options as object | undefined), retries: 2 };
+    }
+    if (Array.isArray(entry.steps)) setAgentRetries(entry.steps as unknown[]);
+  }
+}
+
 // The lead writes each analyzer's brief into one mapping entry; the brief names
 // its transcript path literally (see LEAD_TEMPLATE), so the brief text maps an
 // input file to the analyzer definition that processes it.
@@ -107,6 +119,7 @@ export async function runDream(input: DreamInput): Promise<DreamReport> {
   };
 
   for (const def of plan.definitions) assertNodeSet(def.graph, def.id);
+  for (const def of plan.definitions) setAgentRetries(def.graph);
   await mastra.addDynamicWorkflows(plan.definitions as never);
 
   const root = plan.definitions.find((d) => d.id === 'dream-root');

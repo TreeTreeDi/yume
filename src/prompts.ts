@@ -122,7 +122,7 @@ export const LEAD_TEMPLATE = `{
       "outputSchema": { "type": "object", "properties": { "summary": { "type": "string" } }, "required": ["summary"] },
       "graph": [
         { "type": "mapping", "id": "brief", "mapConfig": "{\\"prompt\\":{\\"template\\":\\"<the analyzer brief you write; include the transcript path literally and \${initData.memDir} for the memory directory>\\"}}" },
-        { "type": "agent", "id": "run", "agentId": "transcript-analyzer", "outputSchema": { "type": "object", "properties": { "summary": { "type": "string" } }, "required": ["summary"] } }
+        { "type": "agent", "id": "run", "agentId": "transcript-analyzer", "outputSchema": { "type": "object", "properties": { "summary": { "type": "string" } }, "required": ["summary"] }, "options": { "retries": 2 } }
       ]
     },
     {
@@ -132,7 +132,7 @@ export const LEAD_TEMPLATE = `{
       "graph": [
         { "type": "parallel", "id": "analyze", "steps": [ { "type": "workflow", "id": "a1", "workflowId": "analyzer-1" }, "..." ] },
         { "type": "mapping", "id": "org-brief", "mapConfig": "{\\"prompt\\":{\\"template\\":\\"All transcript analyzers have finished adding facts to the memory directory at \${initData.memDir}. Please tidy that directory as a whole (merge duplicates, fix structure, keep the index current). Write only inside that directory. When done, submit the number of index entries as index_entries and the list of changes you made as changes.\\"}}" },
-        { "type": "agent", "id": "organize", "agentId": "memory-organizer", "outputSchema": { "type": "object", "properties": { "index_entries": { "type": "integer" }, "changes": { "type": "array", "items": { "type": "string" } } }, "required": ["index_entries", "changes"] } }
+        { "type": "agent", "id": "organize", "agentId": "memory-organizer", "outputSchema": { "type": "object", "properties": { "index_entries": { "type": "integer" }, "changes": { "type": "array", "items": { "type": "string" } } }, "required": ["index_entries", "changes"] }, "options": { "retries": 2 } }
       ]
     }
   ]

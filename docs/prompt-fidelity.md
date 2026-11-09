@@ -46,6 +46,12 @@ only under one of these classes:
 | lead_system.md | 4 | 8 | 0 |
 | **Total** | **54** | **22** | **0** |
 
+## Run-surface adaptation: step retries
+
+| Surface | Adaptation | Reason |
+| --- | --- | --- |
+| `LEAD_TEMPLATE` "agent" entries and the `src/dream.ts` plan check | every "agent" entry carries `"options": { "retries": 2 }` (the template authors it, the runner injects it on any plan that omits it) | the local gateway accepts `response_format` but does not enforce it (verified against 127.0.0.1:3425), so a step can drift to prose and miss its final object; retries re-run the step and preserve upstream's strict object contract rather than weaken it |
+
 ## analyzer_system.md
 
 | # | Upstream rule | Port | Adaptation reason |
