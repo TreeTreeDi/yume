@@ -1,0 +1,29 @@
+data/memory-codex-real/shop-admin-specflow-repo.md
+  s_83b149358dfbc9::t_1ebc3072f4012e 1-68
+data/memory-codex-real/workflow-specflow-lite-sdd.md
+  s_581e7294513199::t_3f3a0e56d00aa6 1-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bc6cdf2c4ceaf7526bb0f6a30d6cd8841ec42b23",
+  "prompts": {},
+  "sessions": {
+    "s_581e7294513199": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "agent-7536fc5a-9b46-4ef8-8092-61e5d06b427d",
+        "model": "unknown"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    },
+    "s_83b149358dfbc9": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "agent-24b2d250-d9d3-437a-bfaa-04e4cad932f2",
+        "model": "unknown"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
