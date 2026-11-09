@@ -1,0 +1,84 @@
+AGENTS.md
+  s_0ee55a7bd22203::t_d95bd5e92cbf44 11-14
+src/mastra.ts
+  s_0ee55a7bd22203::t_59f23f731a7494 30-31,34,36-42,45-81
+  s_0ee55a7bd22203::t_87475af84bbe8f 32-33
+test/since.ts
+  s_0ee55a7bd22203::t_a78325b6fa0768 1-39
+package.json
+  s_0ee55a7bd22203::t_4671ff9c9eaed2 10-11
+  s_0ee55a7bd22203::t_bf65a078ca53e2 9
+README.md
+  s_0ee55a7bd22203::t_c42d6f9562bbba 33-39,42
+  s_0ee55a7bd22203::t_b10c2e60224db3 40-41
+src/tui/term.ts
+  s_0ee55a7bd22203::t_9d1a0cc6f8cb9c 1-105
+src/tui/index.ts
+  s_0ee55a7bd22203::t_af0163021df33b 1-107
+src/tui/state.ts
+  s_0ee55a7bd22203::t_f992de02f07580 1-137
+src/progress.ts
+  s_0ee55a7bd22203::t_7331998e2e5a88 1-24
+src/tui/theme.ts
+  s_0ee55a7bd22203::t_3e1962657b7642 1-90
+src/tui/render.ts
+  s_0ee55a7bd22203::t_a33cc6afd0f79a 1-161
+src/cli/dream.ts
+  s_0ee55a7bd22203::t_78e4b60c61e9fc 4,15-21,23-35,38-39,42-46
+  s_0ee55a7bd22203::t_9dac6687c9dfac 3,11,50-62
+CHANGELOG.md
+  s_0ee55a7bd22203::t_e1aac1e945627f 1-17
+src/prompts.ts
+  s_0f9a00d23f2312::t_4ffdf37fb2bbb1 125,135
+src/since.ts
+  s_0ee55a7bd22203::t_eef40c47ff74f9 1,3,9,11,13-17,21,24-29,32-34,37-42,44-59
+  s_0ee55a7bd22203::t_381413c5aa3547 2,4-8,10,12,18-20,22-23,30-31,35-36,60
+  s_0ee55a7bd22203::t_a81c495d5176cf 43
+src/tools.ts
+  s_0ee55a7bd22203::t_bd5516240751f9 100
+  s_0ee55a7bd22203::t_2712506cd5ef34 71
+  s_0ee55a7bd22203::t_3d2fecd2059c2a 84
+  s_0ee55a7bd22203::t_1134d17924eb17 17-18,25-30
+  s_0f9a00d23f2312::t_04666419620f19 31-32
+test/tui.ts
+  s_0ee55a7bd22203::t_d7cf7038cd62f1 1,3-7,9-88
+  s_0ee55a7bd22203::t_399effe1b3250a 2,8
+  s_0ee55a7bd22203::t_f83909ef05354e 89-112
+docs/prompt-fidelity.md
+  s_0f9a00d23f2312::t_303d98f3a9cd62 49-54
+src/dream.ts
+  s_0ee55a7bd22203::t_01ab9663e1cdec 188-190
+  s_0ee55a7bd22203::t_ccb3165a5527d4 116-120,124
+  s_0ee55a7bd22203::t_c30cca598e6d79 1
+  s_0ee55a7bd22203::t_f8339e7dd2a7f6 151-164,166
+  s_0ee55a7bd22203::t_b96f1a23504660 6
+  s_0ee55a7bd22203::t_3356986ed9a462 123
+  s_0ee55a7bd22203::t_ef9f506e0fc537 5,8
+  s_0ee55a7bd22203::t_bccda3874d1518 196,199,202,204,207,209,215-217,221-225
+  s_0ee55a7bd22203::t_dd131565e4394e 82-95,98,109
+  s_0f9a00d23f2312::t_f36c02ae31eb09 41-52,146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "db9f38385bc40d1bbd0710fdcc358d64fff3f98c",
+  "prompts": {},
+  "sessions": {
+    "s_0ee55a7bd22203": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "agent-911fede0-c5da-4f8b-8f8f-718b4e14dae6",
+        "model": "unknown"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    },
+    "s_0f9a00d23f2312": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1be21-6395-744b-9764-a4e9c88f7abc",
+        "model": "mimo-v2.6-pro"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
