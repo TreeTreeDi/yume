@@ -39,12 +39,12 @@ only under one of these classes:
 
 ## Counts
 
-| File | Kept | Adapted | Dropped |
-| --- | --- | --- | --- |
-| analyzer_system.md | 38 | 11 | 0 |
-| organizer_system.md | 12 | 3 | 0 |
-| lead_system.md | 4 | 8 | 0 |
-| **Total** | **54** | **22** | **0** |
+| File | Kept | Adapted | Added | Dropped |
+| --- | --- | --- | --- | --- |
+| analyzer_system.md | 38 | 11 | 0 | 0 |
+| organizer_system.md | 12 | 3 | 1 | 0 |
+| lead_system.md | 4 | 8 | 0 | 0 |
+| **Total** | **54** | **22** | **1** | **0** |
 
 ## Run-surface adaptation: step retries
 
@@ -125,6 +125,14 @@ only under one of these classes:
 | O13 | Do not invent facts, do not delete fact lines; read the file back after every write | kept | |
 | O14 | `{run_preferences}` is injected before the final reply line | adapted | Harness injection: nothing is injected locally |
 | O15 | Reply with one JSON object on a single line: `{"index_entries": ..., "changes": [...]}` | kept | |
+
+### Yume-added rules
+
+No upstream counterpart. Upstream O1–O15 kept/adapted judgments above are unchanged.
+
+| # | Added rule | Reason |
+| --- | --- | --- |
+| Y1 | `ORGANIZER_SYSTEM` skill extraction plus per-run quota: extract a reusable process into its own file only when all three hold (reusable process a future agent could follow again; over half the file body excluding frontmatter; off-topic section), and plan merges and extractions within `MAX_WRITES_PER_RUN` writes per run across write and edit; a refused write stays undone and is listed under changes as not done | Local mechanism with no upstream rule: the write quota (`src/tools.ts`) bounds one run, and the three extraction criteria bound when a process becomes its own skill file |
 
 ## lead_system.md
 
