@@ -1,0 +1,21 @@
+CHANGELOG.md
+  s_0ee55a7bd22203::t_51e52e8a98d106 11
+.github/workflows/ci.yml
+  s_0ee55a7bd22203::t_7731430b68260e 1-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "561537b1a1fb35139511325832c44aa225ef78a0",
+  "prompts": {},
+  "sessions": {
+    "s_0ee55a7bd22203": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "agent-911fede0-c5da-4f8b-8f8f-718b4e14dae6",
+        "model": "unknown"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
