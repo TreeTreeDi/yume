@@ -1,0 +1,27 @@
+README.zh-CN.md
+  s_0ee55a7bd22203::t_b592fc4a6783ec 147-150
+CHANGELOG.md
+  s_0ee55a7bd22203::t_f00aadb12d8f1b 7
+LICENSE
+  s_0ee55a7bd22203::t_628cae646e53de 1-21
+package.json
+  s_0ee55a7bd22203::t_a8ef78716a8093 5
+README.md
+  s_0ee55a7bd22203::t_1d83ba84f8b308 147-150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2f4875e9264ecec574ae08fae5eb95f1a35b83e8",
+  "prompts": {},
+  "sessions": {
+    "s_0ee55a7bd22203": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "agent-911fede0-c5da-4f8b-8f8f-718b4e14dae6",
+        "model": "unknown"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
