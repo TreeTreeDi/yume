@@ -1,0 +1,18 @@
+src/transcripts/distill.ts
+  h_05f32768e190e9 1-119
+src/transcripts/types.ts
+  h_05f32768e190e9 1-2,32-33,40
+test/distill.ts
+  h_05f32768e190e9 1-154
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "03954c6c0255f7535a20f795411adf73b44267db",
+  "prompts": {},
+  "humans": {
+    "h_05f32768e190e9": {
+      "author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
