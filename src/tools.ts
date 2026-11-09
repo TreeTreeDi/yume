@@ -14,10 +14,20 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 // edit stay inside the memory directory (upstream: "Write only inside that directory").
 let memRoot = resolve('.');
 let transcriptRoot = resolve('.');
+let onReadTranscript: ((abs: string) => void) | null = null;
+let onMemoryChange: (() => void) | null = null;
 
 export function setToolRoots(memory: string, transcripts: string): void {
   memRoot = resolve(memory);
   transcriptRoot = resolve(transcripts);
+}
+
+export function setToolActivity(hooks: {
+  onReadTranscript?: (abs: string) => void;
+  onMemoryChange?: () => void;
+} | null): void {
+  onReadTranscript = hooks?.onReadTranscript ?? null;
+  onMemoryChange = hooks?.onMemoryChange ?? null;
 }
 
 function inside(root: string, p: string): boolean {
@@ -58,6 +68,7 @@ export const readTool = createTool({
     const abs = resolve(memRoot, path);
     const ok = inside(memRoot, abs) || inside(transcriptRoot, abs);
     if (!ok) throw new Error(`read refused outside memory and transcripts: ${path}`);
+    if (inside(transcriptRoot, abs)) onReadTranscript?.(abs);
     return { text: readFileSync(abs, 'utf8') };
   },
 });
@@ -70,6 +81,7 @@ export const writeTool = createTool({
     const abs = requireMemFile(resolve(memRoot, path));
     mkdirSync(dirname(abs), { recursive: true });
     writeFileSync(abs, content);
+    onMemoryChange?.();
     return { path: abs, bytes: content.length };
   },
 });
@@ -85,6 +97,7 @@ export const editTool = createTool({
       throw new Error(`oldText not found in ${path}; re-read the file before editing`);
     }
     writeFileSync(abs, text.replace(oldText, newText));
+    onMemoryChange?.();
     return { path: abs };
   },
 });
