@@ -1,0 +1,16 @@
+.gitignore
+  h_05f32768e190e9 1
+docs/research/backpass-mechanism-and-memory-gradients.md
+  h_05f32768e190e9 1-187
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9166f8225101896900cbc94071e1c23230584f10",
+  "prompts": {},
+  "humans": {
+    "h_05f32768e190e9": {
+      "author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
