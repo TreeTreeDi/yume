@@ -6,6 +6,7 @@ import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { z } from 'zod';
 import { memoryTools } from './tools.js';
 import { ANALYZER_SYSTEM, ORGANIZER_SYSTEM, LEAD_SYSTEM } from './prompts.js';
+import { loadConfigOrExit, type ResolvedConfig } from './config.js';
 
 const BASE_URL = process.env.OPENAI_BASE_URL ?? 'http://127.0.0.1:3425/v1';
 const API_KEY = process.env.OPENAI_API_KEY ?? 'magpie';
@@ -27,22 +28,16 @@ const ORGANIZER_OUTPUT = toStandardSchema<{ index_entries: number; changes: stri
   z.object({ index_entries: z.number(), changes: z.array(z.string()) }),
 );
 
-export const DEFAULT_MODELS = {
-  lead: 'cline/cline-pass/mimo-v2.6-pro',
-  analyzer: 'cursor/grok-4.6',
-  organizer: 'cursor/grok-4.6',
-} as const;
-
-export function resolveModels(): { lead: string; analyzer: string; organizer: string } {
+export function resolveModels(config: ResolvedConfig): { lead: string; analyzer: string; organizer: string } {
   return {
-    lead: process.env.YUME_LEAD_MODEL ?? DEFAULT_MODELS.lead,
-    analyzer: process.env.YUME_ANALYZER_MODEL ?? DEFAULT_MODELS.analyzer,
-    organizer: process.env.YUME_ORGANIZER_MODEL ?? DEFAULT_MODELS.organizer,
+    lead: config.models.lead.value,
+    analyzer: config.models.analyzer.value,
+    organizer: config.models.organizer.value,
   };
 }
 
-export function createMastra(): Mastra {
-  const models = resolveModels();
+export function createMastra(config: ResolvedConfig = loadConfigOrExit()): Mastra {
+  const models = resolveModels(config);
   const leadAgent = new Agent({
     id: 'memory-distiller',
     name: 'memory-distiller',

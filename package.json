@@ -6,10 +6,14 @@
   "type": "module",
   "scripts": {
     "dream": "tsx src/cli/dream.ts",
+    "config": "tsx src/cli/config.ts",
+    "retro": "tsx src/cli/retro.ts",
     "assert": "tsx test/assertions.ts",
     "test:parsers": "tsx test/parsers.ts",
     "test:tui": "tsx test/tui.ts",
-    "test:since": "tsx test/since.ts"
+    "test:since": "tsx test/since.ts",
+    "test:config": "tsx test/config.ts",
+    "test:retro": "tsx test/retro.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.87",
