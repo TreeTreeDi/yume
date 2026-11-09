@@ -1,0 +1,21 @@
+CHANGELOG.md
+  s_83b149358dfbc9::t_e87ce46b2fd18a 16
+docs/research/backpass-mechanism-research.md
+  s_83b149358dfbc9::t_5ae5fe7307e8bd 1-235
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "74a4567e319ce6e1bf05d141ec9badd7203d8de4",
+  "prompts": {},
+  "sessions": {
+    "s_83b149358dfbc9": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "agent-24b2d250-d9d3-437a-bfaa-04e4cad932f2",
+        "model": "unknown"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
