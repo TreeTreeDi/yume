@@ -1,5 +1,9 @@
 # Yume
 
+<p align="center">
+  <img src="docs/yume-icon.png" width="160" alt="Yume">
+</p>
+
 Yume 是本地 Agent Memory 与 Dreaming。它把 Anthropic《Dreaming with a dynamic workflow》cookbook 迁移到 TypeScript 与 Mastra，并在本地运行。Transcript 保存原始会话记录，后续整理不改写它。Memory 从 Transcript 归纳，并指向产生它的证据。
 
 ## 目标

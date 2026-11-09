@@ -4,6 +4,7 @@ All notable changes to Yume are recorded here. The file is the timeline `AGENTS.
 
 ## Unreleased
 
+- README shows `docs/yume-icon.png` under the title.
 - README names the Mastra Agent inner loop, the dynamic-workflow outer graph, the live TUI, and `--since`.
 - Live dream progress TUI on stderr when the terminal is eligible. Analyzer failures stay as rows. A throwing renderer does not stop the run.
 - `--since` filters inputs by session `createdAt`. `7d` and `30d` work. `1mo` is 30 days. `m` is minutes.
