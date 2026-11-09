@@ -30,6 +30,16 @@ npm run dream -- \
   test/fixtures/pi-03-overlap-conflict.jsonl \
   --memory data/memory --work data/runs/latest
 
+# 只 dream 最近 7 天或 30 天（按 session createdAt）
+npm run dream -- --transcripts data/transcripts --since 7d
+npm run dream -- --transcripts data/transcripts --since 30d
+
+# 换 magpie 模型（也可设 YUME_LEAD_MODEL / YUME_ANALYZER_MODEL / YUME_ORGANIZER_MODEL）
+npm run dream -- --transcripts data/transcripts --since 7d \
+  --lead-model cline/cline-pass/mimo-v2.6-pro \
+  --analyzer-model cursor/grok-4.6 \
+  --organizer-model cursor/grok-4.6
+
 # 测试轨：对照断言
 npm run assert -- data/memory data/runs/latest/dream-report.json
 

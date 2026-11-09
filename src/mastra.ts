@@ -7,8 +7,6 @@ import { z } from 'zod';
 import { memoryTools } from './tools.js';
 import { ANALYZER_SYSTEM, ORGANIZER_SYSTEM, LEAD_SYSTEM } from './prompts.js';
 
-// Model routing follows the project standard recorded on the decision map:
-// key judgment uses Codex, research execution uses DeepSeek or Grok, prose uses Muse.
 const BASE_URL = process.env.OPENAI_BASE_URL ?? 'http://127.0.0.1:3425/v1';
 const API_KEY = process.env.OPENAI_API_KEY ?? 'magpie';
 
@@ -22,9 +20,6 @@ const provider = createOpenAICompatible({
   supportsStructuredOutputs: true,
 });
 
-// Workflow agent steps declare their own output schema; these defaults pair it
-// with prompt-level JSON enforcement, which is the closest faithful migration
-// of upstream's native structured-output enforcement to this local gateway.
 const ANALYZER_OUTPUT = toStandardSchema<{ summary: string }>(
   z.object({ summary: z.string() }),
 );
@@ -32,50 +27,58 @@ const ORGANIZER_OUTPUT = toStandardSchema<{ index_entries: number; changes: stri
   z.object({ index_entries: z.number(), changes: z.array(z.string()) }),
 );
 
-const LEAD_MODEL = process.env.YUME_LEAD_MODEL ?? 'codex/gpt-6.1-sol';
-const ANALYZER_MODEL = process.env.YUME_ANALYZER_MODEL ?? 'workbuddy/deepseek-v4.1-flash';
-const ORGANIZER_MODEL = process.env.YUME_ORGANIZER_MODEL ?? 'cline/cline-pass/muse-spark-1.3-contributor';
+export const DEFAULT_MODELS = {
+  lead: 'cline/cline-pass/mimo-v2.6-pro',
+  analyzer: 'cursor/grok-4.6',
+  organizer: 'cursor/grok-4.6',
+} as const;
 
-export const leadAgent = new Agent({
-  id: 'memory-distiller',
-  name: 'memory-distiller',
-  model: provider(LEAD_MODEL),
-  instructions: LEAD_SYSTEM,
-});
-
-export const analyzerAgent = new Agent<
-  'transcript-analyzer',
-  typeof memoryTools,
-  { summary: string }
->({
-  id: 'transcript-analyzer',
-  name: 'transcript-analyzer',
-  model: provider(ANALYZER_MODEL),
-  instructions: ANALYZER_SYSTEM,
-  tools: memoryTools,
-  defaultOptions: {
-    maxSteps: 60,
-    structuredOutput: { schema: ANALYZER_OUTPUT, jsonPromptInjection: 'system' },
-  },
-});
-
-export const organizerAgent = new Agent<
-  'memory-organizer',
-  typeof memoryTools,
-  { index_entries: number; changes: string[] }
->({
-  id: 'memory-organizer',
-  name: 'memory-organizer',
-  model: provider(ORGANIZER_MODEL),
-  instructions: ORGANIZER_SYSTEM,
-  tools: memoryTools,
-  defaultOptions: {
-    maxSteps: 60,
-    structuredOutput: { schema: ORGANIZER_OUTPUT, jsonPromptInjection: 'system' },
-  },
-});
+export function resolveModels(): { lead: string; analyzer: string; organizer: string } {
+  return {
+    lead: process.env.YUME_LEAD_MODEL ?? DEFAULT_MODELS.lead,
+    analyzer: process.env.YUME_ANALYZER_MODEL ?? DEFAULT_MODELS.analyzer,
+    organizer: process.env.YUME_ORGANIZER_MODEL ?? DEFAULT_MODELS.organizer,
+  };
+}
 
 export function createMastra(): Mastra {
+  const models = resolveModels();
+  const leadAgent = new Agent({
+    id: 'memory-distiller',
+    name: 'memory-distiller',
+    model: provider(models.lead),
+    instructions: LEAD_SYSTEM,
+  });
+  const analyzerAgent = new Agent<
+    'transcript-analyzer',
+    typeof memoryTools,
+    { summary: string }
+  >({
+    id: 'transcript-analyzer',
+    name: 'transcript-analyzer',
+    model: provider(models.analyzer),
+    instructions: ANALYZER_SYSTEM,
+    tools: memoryTools,
+    defaultOptions: {
+      maxSteps: 60,
+      structuredOutput: { schema: ANALYZER_OUTPUT, jsonPromptInjection: 'system' },
+    },
+  });
+  const organizerAgent = new Agent<
+    'memory-organizer',
+    typeof memoryTools,
+    { index_entries: number; changes: string[] }
+  >({
+    id: 'memory-organizer',
+    name: 'memory-organizer',
+    model: provider(models.organizer),
+    instructions: ORGANIZER_SYSTEM,
+    tools: memoryTools,
+    defaultOptions: {
+      maxSteps: 60,
+      structuredOutput: { schema: ORGANIZER_OUTPUT, jsonPromptInjection: 'system' },
+    },
+  });
   return new Mastra({
     agents: {
       'memory-distiller': leadAgent,
