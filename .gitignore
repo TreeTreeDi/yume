@@ -1,0 +1,9 @@
+node_modules/
+dist/
+yume.db
+data/runs/
+data/memory/
+*.log
+wiki/
+yume.db-shm
+yume.db-wal

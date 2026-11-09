@@ -1,0 +1,6 @@
+{"type": "session", "version": 3, "id": "sess-fixture-03", "timestamp": "2026-10-01T10:00:00.000Z", "cwd": "/proj/tidewick"}
+{"type": "message", "id": "m1", "parentId": null, "timestamp": "2026-10-01T10:01:00.000Z", "message": {"role": "user", "content": [{"type": "text", "text": "What are the station loading rules?"}]}}
+{"type": "message", "id": "m2", "parentId": null, "timestamp": "2026-10-01T10:01:00.000Z", "message": {"role": "toolResult", "toolName": "bash", "isError": false, "content": [{"type": "text", "text": "$ grep -r station data/\ndata/stations.json: stations load from data/stations.json at startup."}]}}
+{"type": "message", "id": "m3", "parentId": null, "timestamp": "2026-10-01T10:01:00.000Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Station loading: data/stations.json at startup."}]}}
+{"type": "message", "id": "m4", "parentId": null, "timestamp": "2026-10-01T10:01:00.000Z", "message": {"role": "user", "content": [{"type": "text", "text": "Someone said stations can also load from a URL."}]}}
+{"type": "message", "id": "m5", "parentId": null, "timestamp": "2026-10-01T10:01:00.000Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Unverified claim noted: a URL loading source was mentioned without evidence. Keeping both claims marked."}]}}
