@@ -4,6 +4,7 @@ All notable changes to Yume are recorded here. The file is the timeline `AGENTS.
 
 ## Unreleased
 
+- The project is MIT licensed. The license text is in `LICENSE`.
 - `README.md` is English. `README.zh-CN.md` is Chinese. Each page links to the other.
 - README shows `docs/yume-icon.png` under the title.
 - README names the Mastra Agent inner loop, the dynamic-workflow outer graph, the live TUI, and `--since`.
