@@ -1,0 +1,22 @@
+package.json
+  h_05f32768e190e9 12-13
+src/mastra.ts
+  h_05f32768e190e9 7,45-47
+src/prompts.ts
+  h_05f32768e190e9 98
+src/tools.ts
+  h_05f32768e190e9 33-59,90-110,126-127,129,134-135,137
+test/tools.ts
+  h_05f32768e190e9 1-123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7a798810eb8849941f5ec80bbb6174bbd43a43ae",
+  "prompts": {},
+  "humans": {
+    "h_05f32768e190e9": {
+      "author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
