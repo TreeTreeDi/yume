@@ -1,0 +1,16 @@
+.gitignore
+  h_05f32768e190e9 1
+docs/research/cross-harness-memory-injection.md
+  h_05f32768e190e9 1-209
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f5cf709f23a11b613da15501453b9b72f1cc28a0",
+  "prompts": {},
+  "humans": {
+    "h_05f32768e190e9": {
+      "author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
