@@ -1,0 +1,16 @@
+CHANGELOG.md
+  h_05f32768e190e9 17-19
+docs/prompt-fidelity.md
+  h_05f32768e190e9 42-47,129-136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "783d3e9348d4187aea838ee33f63bf3e5b89db26",
+  "prompts": {},
+  "humans": {
+    "h_05f32768e190e9": {
+      "author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
