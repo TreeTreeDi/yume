@@ -1,55 +1,101 @@
 # Yume
 
-Yume 是本地 Agent Memory 与 Dreaming。它把 Anthropic《Dreaming with a dynamic workflow》cookbook 的行为迁移到 TypeScript 加 Mastra，本地运行。
+[English](README.md) | [中文](README.zh-CN.md)
 
-Transcript 是证据。它保存会话留下的原始记录。后续整理不改写 Transcript。
+<p align="center">
+  <img src="docs/yume-icon.png" width="160" alt="Yume">
+</p>
 
-Memory 是整理后的知识。它从 Transcript 归纳而来，并指向产生它的证据。
+Yume is local agent memory and dreaming. It ports Anthropic's *Dreaming with a dynamic workflow* cookbook to TypeScript and Mastra, and it runs on your machine. A transcript keeps the raw session record. Later passes do not rewrite it. Memory is distilled from the transcript and points back at that evidence.
 
-## 目标
+## Goal
 
-把上游 cookbook 的行为完整迁移过来。行为对齐上游。仅迁移差异允许改动。要扩展先立项批准。
+Port the upstream cookbook's behavior in full. Match that behavior. Change only what the port requires. New scope needs an approved issue first.
 
-## 工作方式
+## Quick start
 
-一次 dream 有三个角色。Lead 读输入清单，产出 Mastra 动态工作流定义。每个 transcript 分配一个 Analyzer。Analyzer 并发直写共享记忆目录，写后读回校验。Organizer 最后跑一次，合并重复、处理冲突、维护索引。
-
-Transcript 支持两种格式。pi 会话 JSONL。codex rollout JSONL。
-
-## 快速开始
+Set Magpie:
 
 ```bash
 npm install
 export OPENAI_BASE_URL=http://127.0.0.1:3425/v1
 export OPENAI_API_KEY=magpie
+```
 
-# 实践轨：对三个 pi fixture 跑完整 dream
+Run a full dream on the three pi fixtures:
+
+```bash
 npm run dream -- \
   test/fixtures/pi-01-stale-fact.jsonl \
   test/fixtures/pi-02-buried-detail.jsonl \
   test/fixtures/pi-03-overlap-conflict.jsonl \
   --memory data/memory --work data/runs/latest
+```
 
-# 只 dream 最近 7 天或 30 天（按 session createdAt）
+Pass `--transcripts` for a directory and `--since` to filter by session `createdAt`. `7d`, `30d`, `1mo` (30 days), and `m` (minutes) work. `--transcripts` reads only `*.jsonl` in that directory, one level. Nested Pi stores need explicit paths, or flatten the files first:
+
+```bash
 npm run dream -- --transcripts data/transcripts --since 7d
 npm run dream -- --transcripts data/transcripts --since 30d
+```
 
-# 换 magpie 模型（也可设 YUME_LEAD_MODEL / YUME_ANALYZER_MODEL / YUME_ORGANIZER_MODEL）
+Default models are Lead `cline/cline-pass/mimo-v2.6-pro` and Analyzer and Organizer `cursor/grok-4.6`. Override with flags or env:
+
+```bash
 npm run dream -- --transcripts data/transcripts --since 7d \
   --lead-model cline/cline-pass/mimo-v2.6-pro \
   --analyzer-model cursor/grok-4.6 \
   --organizer-model cursor/grok-4.6
-
-# 测试轨：对照断言
-npm run assert -- data/memory data/runs/latest/dream-report.json
-
-# codex 解析检查（codex fixture 不进 dream，单测解析）
-npm run test:parsers
 ```
 
-## Demo 输出
+Env vars are `YUME_LEAD_MODEL`, `YUME_ANALYZER_MODEL`, and `YUME_ORGANIZER_MODEL`.
 
-最近一次完整运行（三个模拟 session，覆盖上游三个难点：事实过时、细节埋藏、主题重叠含冲突）：
+When the terminal is eligible, stderr shows a live TUI. `--json` skips the TUI. The JSON report always prints on stdout:
+
+```bash
+npm run dream -- --transcripts data/transcripts --since 7d --json
+```
+
+Memory defaults to `--memory data/memory`. Run records and `dream-report.json` default to `--work data/runs/latest`.
+
+Assertions and unit scripts:
+
+```bash
+# fixture assertions
+npm run assert -- data/memory data/runs/latest/dream-report.json
+
+# session parse check
+npm run test:parsers
+
+# --since filter
+npm run test:since
+
+# TUI state
+npm run test:tui
+```
+
+## How a run works
+
+Yume does not hand-roll an agent loop in `src/mastra.ts`.
+
+`src/mastra.ts` only builds three Mastra Agent objects and one Mastra instance. There is no while-tool loop in that file.
+
+The inner loop is `@mastra/core` Agent. Analyzer and Organizer mount memory tools, with `maxSteps: 60`. They emit structured objects through `structuredOutput` and `jsonPromptInjection: 'system'`. Tool choice and multi-step execution stay inside Mastra Agent.
+
+The outer graph is scheduled in `src/dream.ts`. The lead calls `leadAgent.generate` and returns workflow JSON. Code allows only `workflow`, `parallel`, `agent`, and `mapping` nodes. Then `mastra.addDynamicWorkflows` registers the graph, and `mastra.getWorkflow('dream-root').createRun().start()` runs it.
+
+A full dream has these stages:
+
+1. Render. Load JSONL transcripts and write plain text for the analyzers.
+2. Backup. Copy the memory directory into the run directory before writes.
+3. Lead. The lead reads the input list and emits the dynamic workflow.
+4. Analyze. The workflow starts. Analyzers run in parallel, read their text, write the shared memory directory, and read back to check the write.
+5. Organize. The workflow runs Organizer once. It merges duplicates, keeps conflicts, and maintains `_index.md`.
+6. Report. Count analyzer steps that actually succeeded. Write `dream-report.json`.
+
+## Demo output
+
+The last full fixture run covers three upstream cases: a stale fact, a buried detail, and overlapping topics with a conflict.
 
 ```
 {
@@ -81,14 +127,24 @@ PASS  frontmatter and size  —  0 without frontmatter, 0 over 100KB
 PASS  codex parser  —  8 events: assistant, tool_call, tool_result, user
 ```
 
-记忆库示例见 `data/memory/`（不入库）。运行记录与 dream 报告在 `data/runs/`（不入库）。
+`data/memory/` and `data/runs/` stay on disk. They are not in git.
 
-## 目录
+## Layout
 
-- `src/transcripts/`：pi 与 codex JSONL 解析，渲染为上游风格纯文本 transcript。
-- `src/prompts.ts`：上游 Lead、Analyzer、Organizer prompt 移植。逐条规则对照见 `docs/prompt-fidelity.md`。
-- `src/tools.ts`：记忆文件工具。写与编辑只进记忆目录。
-- `src/mastra.ts`：Mastra 装配。三个 agent 与 LibSQL 存储。
-- `src/dream.ts`：dream 执行器。渲染、备份、计划校验、注册运行，dream-report 按 run 的 analyzer step 结果计数。
-- `test/assertions.ts`：对照断言。测试轨与实践轨分轨，结果互为对照。
-- `test/parsers.ts`：codex 解析检查。codex fixture 经 `src/transcripts/load.ts` 产出 user/assistant/tool 事件。
+- `src/cli/dream.ts` is the CLI. It parses flags, models, and `--since`, and it mounts the TUI when the terminal allows it.
+- `src/dream.ts` runs the dream. It renders text, backs up memory, registers the dynamic workflow, and writes the report.
+- `src/mastra.ts` constructs the three Mastra agents and LibSQL storage.
+- `src/progress.ts` fans out progress events across phases.
+- `src/prompts.ts` holds the ported Lead, Analyzer, and Organizer prompts. Rule-by-rule notes live in `docs/prompt-fidelity.md`.
+- `src/since.ts` parses the time window and filters files by session `createdAt`.
+- `src/tools.ts` is the memory file tools.
+- `src/transcripts/` parses pi and codex JSONL and renders plain text.
+- `src/tui/` paints live progress on stderr and restores the terminal.
+- `test/assertions.ts` asserts on the memory store and the run report.
+- `test/parsers.ts` checks Codex parse output.
+- `test/since.ts` checks the time filter.
+- `test/tui.ts` checks TUI state and fail-soft paint.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
