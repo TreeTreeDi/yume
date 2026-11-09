@@ -1,3 +1,5 @@
+import { distillEvents } from './distill.js';
+
 export type TranscriptEvent =
   | { kind: 'user'; text: string }
   | { kind: 'assistant'; text: string }
@@ -27,14 +29,15 @@ export function contentToText(content: unknown): string {
   return parts.filter(Boolean).join('\n');
 }
 
-export function renderTranscript(s: SessionTranscript): string {
+export function renderTranscript(s: SessionTranscript, opts?: { distill?: boolean }): string {
+  const events = opts?.distill === false ? s.events : distillEvents(s.events);
   const lines: string[] = [];
   lines.push(`SESSION ${s.id}: ${s.title}`);
   lines.push(`source: ${s.source}; created ${s.createdAt}`);
   lines.push('');
   lines.push(`=== primary thread ${s.id}: ${s.source} ===`);
   lines.push('');
-  for (const ev of s.events) {
+  for (const ev of events) {
     if (ev.kind === 'user') {
       lines.push('USER:');
       lines.push(ev.text);
