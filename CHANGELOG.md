@@ -14,6 +14,9 @@ All notable changes to Yume are recorded here. The file is the timeline `AGENTS.
 - Agent steps retry twice when structured output drifts.
 - GitHub Actions `ci` runs `tsc` and the parser / since / TUI scripts on pull requests.
 - Add research doc on `backpass` (kunchenguid/backpass) mechanism and memory gradient flow architecture in `docs/research/backpass-mechanism-research.md` (2026-11-09).
+- Long transcripts are clipped deterministically before rendering (`src/transcripts/distill.ts`, on by default): tool payloads keep head/tail lines with a prune marker, error lines are rescued (#24, 2026-11-09).
+- Memory writes share one per-run quota (`MAX_WRITES_PER_RUN` across write and edit): a refused write stays undone and is listed as not done. The Organizer extracts a reusable process into its own skill file only when all three hold (reusable process, over half the file body, off-topic section) (#25, 2026-11-09).
+- `yume.config.json` carries model routing and retro thresholds: `yume config show` prints effective values with sources, `yume retro --check` reports pending transcripts against the thresholds without writing (#26, 2026-11-09).
 
 ## 0.1.0 - 2026-11-08
 
