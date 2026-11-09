@@ -1,0 +1,30 @@
+CHANGELOG.md
+  s_0ee55a7bd22203::t_e9eaf33a524911 7
+README.md
+  s_0ee55a7bd22203::t_0e8f2aab11f9a8 29
+  s_0ee55a7bd22203::t_5d5fed126bcc79 3,7
+  s_0ee55a7bd22203::t_bfbb8480a6d9de 71-75
+  s_0ee55a7bd22203::t_cce45cbdbcf905 36
+  s_0ee55a7bd22203::t_d4d66ef40a1ced 19
+  s_0ee55a7bd22203::t_b5c8cda2d2f0f5 20-21
+  s_0ee55a7bd22203::t_80d6ce25f4910e 27-28
+  s_0ee55a7bd22203::t_dd5b9a04da3d40 37-38
+  s_0ee55a7bd22203::t_0d1182be2a4e84 76-78
+  s_0ee55a7bd22203::t_29b7d7d17cc68e 11-12,17,31,34,43-45,47-58,61,63-68,79-89,92,124,128-140
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9aae30f0f833281f4f006bc82a8582f8ba83541b",
+  "prompts": {},
+  "sessions": {
+    "s_0ee55a7bd22203": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "agent-911fede0-c5da-4f8b-8f8f-718b4e14dae6",
+        "model": "unknown"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
