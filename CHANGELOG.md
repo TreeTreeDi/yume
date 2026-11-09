@@ -4,6 +4,7 @@ All notable changes to Yume are recorded here. The file is the timeline `AGENTS.
 
 ## Unreleased
 
+- README names the Mastra Agent inner loop, the dynamic-workflow outer graph, the live TUI, and `--since`.
 - Live dream progress TUI on stderr when the terminal is eligible. Analyzer failures stay as rows. A throwing renderer does not stop the run.
 - `--since` filters inputs by session `createdAt`. `7d` and `30d` work. `1mo` is 30 days. `m` is minutes.
 - Default Magpie models: Lead `cline/cline-pass/mimo-v2.6-pro`, Analyzer and Organizer `cursor/grok-4.6`. Override with `--lead-model` / `--analyzer-model` / `--organizer-model` or `YUME_*_MODEL`.
