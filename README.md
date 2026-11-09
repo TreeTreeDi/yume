@@ -144,3 +144,7 @@ PASS  codex parser  —  8 events: assistant, tool_call, tool_result, user
 - `test/parsers.ts` checks Codex parse output.
 - `test/since.ts` checks the time filter.
 - `test/tui.ts` checks TUI state and fail-soft paint.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

@@ -144,3 +144,7 @@ PASS  codex parser  —  8 events: assistant, tool_call, tool_result, user
 - `test/parsers.ts` 负责验证 codex 格式解析。
 - `test/since.ts` 负责测试时间过滤逻辑。
 - `test/tui.ts` 负责测试终端界面状态流转与容错。
+
+## 许可证
+
+MIT。见 [LICENSE](LICENSE)。
