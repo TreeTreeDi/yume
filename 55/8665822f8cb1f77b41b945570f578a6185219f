@@ -1,0 +1,21 @@
+docs/research/grok-build-memory-analysis.md
+  s_d67abe6f59576e::t_2808ccbe8ab8a0 1-107
+CHANGELOG.md
+  s_d67abe6f59576e::t_0a94991a212f94 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "558665822f8cb1f77b41b945570f578a6185219f",
+  "prompts": {},
+  "sessions": {
+    "s_d67abe6f59576e": {
+      "agent_id": {
+        "tool": "windsurf",
+        "id": "historical-prune",
+        "model": "unknown"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
