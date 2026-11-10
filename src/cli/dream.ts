@@ -1,18 +1,17 @@
 import { resolve } from 'node:path';
 import { runDream, listTranscripts } from '../dream.js';
+import { loadConfigOrExit } from '../config.js';
 import { startTui } from '../tui/index.js';
 import { filterTranscriptsBySince, parseSince } from '../since.js';
+import { flag as flagArg } from './flags.js';
 
 const args = process.argv.slice(2);
-const flag = (name: string): string | undefined => {
-  const i = args.indexOf(`--${name}`);
-  return i >= 0 ? args[i + 1] : undefined;
-};
+const flag = (name: string): string | undefined => flagArg(args, name);
 const json = args.includes('--json');
 
 const memDir = resolve(flag('memory') ?? 'data/memory');
 const workDir = resolve(flag('work') ?? 'data/runs/latest');
-const flagNames = new Set(['memory', 'work', 'transcripts', 'since', 'lead-model', 'analyzer-model', 'organizer-model']);
+const flagNames = new Set(['memory', 'work', 'transcripts', 'since', 'config', 'lead-model', 'analyzer-model', 'organizer-model']);
 const inputs = args.filter((a, i) => {
   if (a.startsWith('--')) return false;
   const prev = args[i - 1];
@@ -20,9 +19,16 @@ const inputs = args.filter((a, i) => {
   return true;
 });
 
-if (flag('lead-model')) process.env.YUME_LEAD_MODEL = flag('lead-model');
-if (flag('analyzer-model')) process.env.YUME_ANALYZER_MODEL = flag('analyzer-model');
-if (flag('organizer-model')) process.env.YUME_ORGANIZER_MODEL = flag('organizer-model');
+// Model flags feed the config layer (flag > env > file > default); the
+// boundary parses once here and the frozen result travels with the run.
+const config = loadConfigOrExit({
+  configPath: flag('config'),
+  flags: {
+    lead: flag('lead-model'),
+    analyzer: flag('analyzer-model'),
+    organizer: flag('organizer-model'),
+  },
+});
 
 let since;
 try {
@@ -49,7 +55,7 @@ if (!transcriptPaths.length) {
 
 const tui = await startTui({ json });
 try {
-  const report = await runDream({ transcriptPaths, memDir, workDir });
+  const report = await runDream({ transcriptPaths, memDir, workDir, config });
   tui?.stop();
   console.log(JSON.stringify(report, null, 2));
   if (report.failures.length || !report.organized) process.exit(1);

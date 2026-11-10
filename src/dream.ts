@@ -2,7 +2,9 @@ import { cpSync, mkdirSync, writeFileSync, readdirSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { loadTranscript } from './transcripts/load.js';
 import { renderTranscript } from './transcripts/types.js';
-import { memoryFileCount, setToolActivity, setToolRoots } from './tools.js';
+import { type ResolvedConfig } from './config.js';
+import { contentHashOf, loadProcessed, mergeProcessed, type ProcessedEntry } from './retro.js';
+import { memoryFileCount, resetWriteQuota, setToolActivity, setToolRoots } from './tools.js';
 import { createMastra } from './mastra.js';
 import { LEAD_TEMPLATE } from './prompts.js';
 import { emitProgress } from './progress.js';
@@ -13,6 +15,7 @@ export interface DreamInput {
   transcriptPaths: string[];
   memDir: string;
   workDir: string;
+  config: ResolvedConfig;
 }
 
 export interface DreamReport {
@@ -22,6 +25,7 @@ export interface DreamReport {
   organized: boolean;
   index_entries: number | null;
   changes: string[];
+  processed: ProcessedEntry[];
 }
 
 function assertNodeSet(graph: unknown[], where: string): void {
@@ -98,13 +102,14 @@ async function runDreamBody(input: DreamInput): Promise<DreamReport> {
   emitProgress('phase:start', { phase: 'render' });
   const textDir = join(workDir, 'transcripts');
   mkdirSync(textDir, { recursive: true });
-  const rendered: { path: string; source: string; text: string }[] = [];
+  const rendered: { path: string; source: string; text: string; session: string }[] = [];
   for (const p of transcriptPaths) {
     const s = loadTranscript(p);
     const text = renderTranscript(s);
-    const out = join(textDir, `${s.id || basename(p, '.jsonl')}.txt`);
+    const session = s.id || basename(p, '.jsonl');
+    const out = join(textDir, `${session}.txt`);
     writeFileSync(out, text);
-    rendered.push({ path: p, source: out, text });
+    rendered.push({ path: p, source: out, text, session });
   }
   emitProgress('phase:done', { phase: 'render' });
 
@@ -113,13 +118,14 @@ async function runDreamBody(input: DreamInput): Promise<DreamReport> {
   cpSync(memDir, backupDir, { recursive: true });
 
   setToolRoots(memDir, textDir);
+  resetWriteQuota();
   setToolActivity({
     onReadTranscript: (abs) => emitProgress('analyzer:active', { source: abs }),
     onMemoryChange: () => emitProgress('memory:files', { count: memoryFileCount() }),
   });
   emitProgress('memory:files', { count: memoryFileCount() });
 
-  const mastra = createMastra();
+  const mastra = createMastra(input.config);
   const leadAgent = mastra.getAgent('memory-distiller');
   emitProgress('phase:start', { phase: 'lead' });
 
@@ -178,6 +184,7 @@ async function runDreamBody(input: DreamInput): Promise<DreamReport> {
     organized: false,
     index_entries: null,
     changes: [],
+    processed: [],
   };
 
   for (const r of rendered) {
@@ -216,6 +223,14 @@ async function runDreamBody(input: DreamInput): Promise<DreamReport> {
   } else {
     emitProgress('phase:done', { phase: 'organize', error: 'organizer did not return a result' });
   }
+
+  // processed[] accumulates across runs: only newly successful inputs join,
+  // keyed by (session, contentHash), so a re-run never double-counts.
+  const failed = new Set(report.failures.map((f) => f.input));
+  const fresh: ProcessedEntry[] = rendered
+    .filter((r) => !failed.has(r.path))
+    .map((r) => ({ session: r.session, contentHash: contentHashOf(r.path) }));
+  report.processed = mergeProcessed(loadProcessed(join(workDir, 'dream-report.json')), fresh);
 
   writeFileSync(join(workDir, 'dream-report.json'), JSON.stringify(report, null, 2));
   emitProgress('dream:done', {
