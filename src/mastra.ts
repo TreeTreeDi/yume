@@ -4,9 +4,9 @@ import { toStandardSchema } from '@mastra/core/schema';
 import { LibSQLStore } from '@mastra/libsql';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { z } from 'zod';
-import { memoryTools, resetWriteQuota } from './tools.js';
+import { memoryTools } from './tools.js';
 import { ANALYZER_SYSTEM, ORGANIZER_SYSTEM, LEAD_SYSTEM } from './prompts.js';
-import { loadConfigOrExit, type ResolvedConfig } from './config.js';
+import { type ResolvedConfig } from './config.js';
 
 const BASE_URL = process.env.OPENAI_BASE_URL ?? 'http://127.0.0.1:3425/v1';
 const API_KEY = process.env.OPENAI_API_KEY ?? 'magpie';
@@ -36,10 +36,7 @@ export function resolveModels(config: ResolvedConfig): { lead: string; analyzer:
   };
 }
 
-export function createMastra(config: ResolvedConfig = loadConfigOrExit()): Mastra {
-  // Run entry: every run builds its Mastra once (see runDreamBody), so the
-  // per-run write quota starts at zero here.
-  resetWriteQuota();
+export function createMastra(config: ResolvedConfig): Mastra {
   const models = resolveModels(config);
   const leadAgent = new Agent({
     id: 'memory-distiller',

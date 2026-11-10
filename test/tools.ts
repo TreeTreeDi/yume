@@ -11,7 +11,6 @@ import {
   writeQuotaUsage,
 } from '../src/tools.js';
 import { ORGANIZER_SYSTEM } from '../src/prompts.js';
-import { createMastra } from '../src/mastra.js';
 
 // Issue #25 acceptance: quota enforcement, per-run reset, skill extraction.
 // Style mirrors test/assertions.ts: named checks, all reported, nonzero exit on failure.
@@ -34,7 +33,6 @@ const tmpRoot = mkdtempSync(join(tmpdir(), 'yume-quota-'));
 const memDir = join(tmpRoot, 'memory');
 const txDir = join(tmpRoot, 'transcripts');
 setToolRoots(memDir, txDir);
-process.env.YUME_DB = join(tmpRoot, 'yume.db');
 
 // 1. Writes past the quota are refused, and the error names quota and used count.
 check('quota refuses writes past the limit', () => {
@@ -61,13 +59,13 @@ check('quota refuses writes past the limit', () => {
   return `limit ${MAX_WRITES_PER_RUN}, refused write past it`;
 });
 
-// 2. The counter resets at the start of each run (createMastra is the run entry).
+// 2. The counter resets at the start of each run (runDream calls resetWriteQuota).
 check('counter resets at run start', () => {
   // Phase 1 leaves the counter exhausted; a new run must zero it.
-  createMastra();
+  resetWriteQuota();
   writeMemoryFile('after-reset.md', 'fresh run\n');
   assert.equal(writeQuotaUsage().used, 1);
-  return 'write succeeds right after createMastra';
+  return 'write succeeds right after resetWriteQuota';
 });
 
 // 3. Extraction: new file carries frontmatter, original keeps [[slug]] only.

@@ -1,40 +1,32 @@
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { loadConfigOrExit, type ResolvedConfig } from '../config.js';
+import { flag, intFlag } from './flags.js';
 
 const args = process.argv.slice(2);
-const flag = (name: string): string | undefined => {
-  const i = args.indexOf(`--${name}`);
-  return i >= 0 ? args[i + 1] : undefined;
-};
-const intFlag = (name: string): number | undefined => {
-  const raw = flag(name);
-  if (raw === undefined) return undefined;
-  const n = Number(raw);
-  if (!Number.isInteger(n)) {
-    console.error(`config error: --${name} expects an integer, got ${JSON.stringify(raw)}`);
-    process.exit(2);
-  }
-  return n;
-};
+const flag_ = (name: string): string | undefined => flag(args, name);
+const intFlag_ = (name: string, min?: number): number | undefined => intFlag(args, name, min);
 const json = args.includes('--json');
 
 function usage(): never {
-  console.error('usage: yume config show [--config <path>] [--lead-model <m>] [--analyzer-model <m>] [--organizer-model <m>] [--json]');
+  console.error('usage: yume config show [--config <path>] [--lead-model <m>] [--analyzer-model <m>] [--organizer-model <m>] [--retro-min-sessions <n>] [--retro-min-bytes <n>] [--json]');
   process.exit(2);
 }
 
 if (args[0] !== 'show') usage();
 
 const config: ResolvedConfig = loadConfigOrExit({
-  configPath: flag('config'),
+  configPath: flag_('config'),
   flags: {
-    lead: flag('lead-model'),
-    analyzer: flag('analyzer-model'),
-    organizer: flag('organizer-model'),
-    minSessions: intFlag('retro-min-sessions'),
-    minBytes: intFlag('retro-min-bytes'),
+    lead: flag_('lead-model'),
+    analyzer: flag_('analyzer-model'),
+    organizer: flag_('organizer-model'),
+    minSessions: intFlag_('retro-min-sessions', 1),
+    minBytes: intFlag_('retro-min-bytes'),
   },
 });
+
+const configTarget = flag_('config') ? resolve(flag_('config') as string) : resolve('yume.config.json');
 
 const rows: [string, string][] = [
   ['models.lead', `${config.models.lead.value} (source: ${config.models.lead.source})`],
@@ -65,7 +57,7 @@ if (json) {
             minBytes: config.retro.trigger.minBytes,
           },
         },
-        configFile: flag('config') ?? resolve('yume.config.json'),
+        configFile: existsSync(configTarget) ? configTarget : null,
       },
       null,
       2,

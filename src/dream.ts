@@ -2,9 +2,9 @@ import { cpSync, mkdirSync, writeFileSync, readdirSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { loadTranscript } from './transcripts/load.js';
 import { renderTranscript } from './transcripts/types.js';
-import { loadConfigOrExit, type ResolvedConfig } from './config.js';
+import { type ResolvedConfig } from './config.js';
 import { contentHashOf, loadProcessed, mergeProcessed, type ProcessedEntry } from './retro.js';
-import { memoryFileCount, setToolActivity, setToolRoots } from './tools.js';
+import { memoryFileCount, resetWriteQuota, setToolActivity, setToolRoots } from './tools.js';
 import { createMastra } from './mastra.js';
 import { LEAD_TEMPLATE } from './prompts.js';
 import { emitProgress } from './progress.js';
@@ -15,7 +15,7 @@ export interface DreamInput {
   transcriptPaths: string[];
   memDir: string;
   workDir: string;
-  config?: ResolvedConfig;
+  config: ResolvedConfig;
 }
 
 export interface DreamReport {
@@ -106,9 +106,10 @@ async function runDreamBody(input: DreamInput): Promise<DreamReport> {
   for (const p of transcriptPaths) {
     const s = loadTranscript(p);
     const text = renderTranscript(s);
-    const out = join(textDir, `${s.id || basename(p, '.jsonl')}.txt`);
+    const session = s.id || basename(p, '.jsonl');
+    const out = join(textDir, `${session}.txt`);
     writeFileSync(out, text);
-    rendered.push({ path: p, source: out, text, session: s.id || basename(p, '.jsonl') });
+    rendered.push({ path: p, source: out, text, session });
   }
   emitProgress('phase:done', { phase: 'render' });
 
@@ -117,13 +118,14 @@ async function runDreamBody(input: DreamInput): Promise<DreamReport> {
   cpSync(memDir, backupDir, { recursive: true });
 
   setToolRoots(memDir, textDir);
+  resetWriteQuota();
   setToolActivity({
     onReadTranscript: (abs) => emitProgress('analyzer:active', { source: abs }),
     onMemoryChange: () => emitProgress('memory:files', { count: memoryFileCount() }),
   });
   emitProgress('memory:files', { count: memoryFileCount() });
 
-  const mastra = createMastra(input.config ?? loadConfigOrExit());
+  const mastra = createMastra(input.config);
   const leadAgent = mastra.getAgent('memory-distiller');
   emitProgress('phase:start', { phase: 'lead' });
 

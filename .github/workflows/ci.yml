@@ -20,3 +20,7 @@ jobs:
       - run: npx tsx test/parsers.ts
       - run: npx tsx test/since.ts
       - run: npx tsx test/tui.ts
+      - run: npx tsx test/distill.ts
+      - run: npx tsx test/tools.ts
+      - run: npx tsx test/config.ts
+      - run: npx tsx test/retro.ts

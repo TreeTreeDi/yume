@@ -3,12 +3,10 @@ import { runDream, listTranscripts } from '../dream.js';
 import { loadConfigOrExit } from '../config.js';
 import { startTui } from '../tui/index.js';
 import { filterTranscriptsBySince, parseSince } from '../since.js';
+import { flag as flagArg } from './flags.js';
 
 const args = process.argv.slice(2);
-const flag = (name: string): string | undefined => {
-  const i = args.indexOf(`--${name}`);
-  return i >= 0 ? args[i + 1] : undefined;
-};
+const flag = (name: string): string | undefined => flagArg(args, name);
 const json = args.includes('--json');
 
 const memDir = resolve(flag('memory') ?? 'data/memory');

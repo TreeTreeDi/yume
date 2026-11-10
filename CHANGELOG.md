@@ -18,6 +18,8 @@ All notable changes to Yume are recorded here. The file is the timeline `AGENTS.
 - Memory writes share one per-run quota (`MAX_WRITES_PER_RUN` across write and edit): a refused write stays undone and is listed as not done. The Organizer extracts a reusable process into its own skill file only when all three hold (reusable process, over half the file body, off-topic section) (#25, 2026-11-09).
 - `yume.config.json` carries model routing and retro thresholds: `yume config show` prints effective values with sources, `yume retro --check` reports pending transcripts against the thresholds without writing (#26, 2026-11-09).
 - `.pi/` goal runtime state and `.DS_Store` are untracked and ignored; they no longer ship in the integration branch (2026-11-10).
+- Review fixes: `createMastra` and `DreamInput` require a `ResolvedConfig`, so nothing below the CLI boundary re-reads env or the config file. The write quota resets at `runDream` start instead of inside `createMastra`. Oversized tool payloads that fit few lines are byte-pruned instead of returned whole. `yume retro --check` accepts `--retro-min-sessions` / `--retro-min-bytes`. CLI flag parsing shares `src/cli/flags.ts`, and `config show --json` reports `configFile: null` when no file exists (2026-11-10).
+- `test:distill` is registered and CI runs `test:distill`, `test:tools`, `test:config`, and `test:retro` (2026-11-10).
 
 ## 0.1.0 - 2026-11-08
 

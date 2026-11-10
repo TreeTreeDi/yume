@@ -73,12 +73,24 @@ function headTailPrune(text: string, head: number, tail: number, rescued: string
   return [...headLines, ...keptMiddle, marker, ...tailLines].join('\n');
 }
 
+// A payload oversized in few lines cannot take the head/tail line path, so
+// it falls back to a byte-level head/tail prune with a byte-only marker.
+function byteHeadTailPrune(text: string, maxBytes: number): string {
+  const buf = Buffer.from(text, 'utf8');
+  if (buf.length <= maxBytes) return text;
+  // Reserve room for the marker line so the whole result stays under the cap.
+  const keep = Math.floor((maxBytes - 64) / 2);
+  const head = buf.subarray(0, keep).toString('utf8');
+  const tail = buf.subarray(buf.length - keep).toString('utf8');
+  return `${head}\n(pruned ${buf.length - keep * 2} bytes)\n${tail}`;
+}
+
 export function distillToolResultText(text: string, isError: boolean): string {
   if (!needsTrim(text, TOOL_RESULT_MAX_LINES, TOOL_RESULT_MAX_BYTES)) return text;
   const lines = text.split('\n');
   const head = isError ? TOOL_RESULT_ERROR_HEAD_LINES : TOOL_RESULT_HEAD_LINES;
   const tail = isError ? TOOL_RESULT_ERROR_TAIL_LINES : TOOL_RESULT_TAIL_LINES;
-  if (lines.length <= head + tail) return text;
+  if (lines.length <= head + tail) return byteHeadTailPrune(text, TOOL_RESULT_MAX_BYTES);
   const middle = lines.slice(head, lines.length - tail);
   const rescued = isError ? collectErrorLines(middle) : [];
   return headTailPrune(text, head, tail, rescued);
@@ -87,7 +99,9 @@ export function distillToolResultText(text: string, isError: boolean): string {
 export function distillToolCallInput(input: string): string {
   if (!needsTrim(input, TOOL_CALL_MAX_LINES, TOOL_CALL_MAX_BYTES)) return input;
   const lines = input.split('\n');
-  if (lines.length <= TOOL_CALL_HEAD_LINES + TOOL_CALL_TAIL_LINES) return input;
+  if (lines.length <= TOOL_CALL_HEAD_LINES + TOOL_CALL_TAIL_LINES) {
+    return byteHeadTailPrune(input, TOOL_CALL_MAX_BYTES);
+  }
   return headTailPrune(input, TOOL_CALL_HEAD_LINES, TOOL_CALL_TAIL_LINES, []);
 }
 

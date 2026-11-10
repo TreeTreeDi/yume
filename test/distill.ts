@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { loadTranscript } from '../src/transcripts/load.js';
 import { renderTranscript } from '../src/transcripts/types.js';
-import { distillEvents } from '../src/transcripts/distill.js';
+import {
+  distillEvents,
+  TOOL_CALL_MAX_BYTES,
+  TOOL_RESULT_MAX_BYTES,
+} from '../src/transcripts/distill.js';
 import type { TranscriptEvent } from '../src/transcripts/types.js';
 
 // #24 distill acceptance: per-fixture checks on inflated large variants.
@@ -148,6 +152,52 @@ for (const path of FIXTURES) {
 
   console.log(
     `PASS  distill ${path}  —  ${rawBytes}B -> ${distilledBytes}B (${((distilledBytes / rawBytes) * 100).toFixed(1)}%), markers ${markerCount}`,
+  );
+}
+
+// Raw fixtures distilled as-is: distilling never grows the transcript and
+// every user prompt survives verbatim.
+for (const path of FIXTURES) {
+  const transcript = loadTranscript(path);
+  const rawText = renderTranscript(transcript, { distill: false });
+  const distilled = distillEvents(transcript.events);
+  const text = renderTranscript({ ...transcript, events: distilled }, { distill: false });
+  assert.ok(
+    Buffer.byteLength(text) <= Buffer.byteLength(rawText),
+    `${path} raw distill grew the transcript`,
+  );
+  for (const e of transcript.events) {
+    if (e.kind === 'user') {
+      assert.ok(text.includes(e.text), `${path} raw user prompt lost`);
+    }
+  }
+}
+console.log('PASS  distill raw fixtures stay no-larger, prompts verbatim');
+
+// Byte-cap fallback: a payload oversized in few lines cannot take the
+// head/tail line path and must still shrink below the byte threshold.
+{
+  const bigResult = 'x'.repeat(20000);
+  const bigInput = 'y'.repeat(10000);
+  const events: TranscriptEvent[] = [
+    { kind: 'tool_result', name: 'bash', text: bigResult, isError: false },
+    { kind: 'tool_call', name: 'bash', input: bigInput },
+  ];
+  const [r, c] = distillEvents(events);
+  const rText = r.kind === 'tool_result' ? r.text : '';
+  const cInput = c.kind === 'tool_call' ? c.input : '';
+  assert.ok(
+    Buffer.byteLength(rText) <= TOOL_RESULT_MAX_BYTES,
+    `single-line result still ${Buffer.byteLength(rText)}B`,
+  );
+  assert.ok(rText.includes('(pruned') && rText.includes('bytes)'), 'result byte marker missing');
+  assert.ok(rText.startsWith('x') && rText.endsWith('x'), 'result head/tail not preserved');
+  assert.ok(
+    Buffer.byteLength(cInput) <= TOOL_CALL_MAX_BYTES,
+    `single-line input still ${Buffer.byteLength(cInput)}B`,
+  );
+  console.log(
+    `PASS  distill byte-cap fallback  —  20000B -> ${Buffer.byteLength(rText)}B, 10000B -> ${Buffer.byteLength(cInput)}B`,
   );
 }
 
