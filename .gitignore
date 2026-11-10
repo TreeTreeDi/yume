@@ -8,3 +8,5 @@ data/memory/
 wiki/
 yume.db-shm
 yume.db-wal
+.DS_Store
+.pi/
