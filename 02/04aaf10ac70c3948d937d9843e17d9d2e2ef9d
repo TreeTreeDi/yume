@@ -1,0 +1,29 @@
+package.json
+  s_8c6ff4b8939ee8::t_a865c9262c7ace 19
+  s_8c6ff4b8939ee8::t_aacbc44f89899d 11
+src/cli/transcripts.ts
+  s_8c6ff4b8939ee8::t_4388a6f3d32729 1-71
+.github/workflows/ci.yml
+  s_8c6ff4b8939ee8::t_a2fa940eae8a24 27
+CHANGELOG.md
+  s_8c6ff4b8939ee8::t_1a9d41ff745c5e 23
+test/transcripts.ts
+  s_8c6ff4b8939ee8::t_1cfa240483a571 1-73,76,79-87
+  s_8c6ff4b8939ee8::t_84949588b0a1ce 74-75,77-78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0204aaf10ac70c3948d937d9843e17d9d2e2ef9d",
+  "prompts": {},
+  "sessions": {
+    "s_8c6ff4b8939ee8": {
+      "agent_id": {
+        "tool": "windsurf",
+        "id": "warp-hardhat",
+        "model": "unknown"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
