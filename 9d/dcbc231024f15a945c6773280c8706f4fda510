@@ -1,0 +1,54 @@
+test/distill.ts
+  s_fb96c66c22450a::t_c2316208e6c073 4-8
+  s_fb96c66c22450a::t_4b843262a7bbc3 158-203
+src/transcripts/distill.ts
+  s_fb96c66c22450a::t_33ccbe98afc479 81-82
+  s_fb96c66c22450a::t_c4a2a1150eb9b4 76-80,83-87,93,102-104
+src/mastra.ts
+  s_fb96c66c22450a::t_cadf54e25e1df4 39
+  s_fb96c66c22450a::t_5e98f68f05b950 7,9
+src/cli/dream.ts
+  s_fb96c66c22450a::t_6edaa2371ea805 6,9
+src/cli/config.ts
+  s_fb96c66c22450a::t_3f509f4fffed0b 60
+  s_fb96c66c22450a::t_c29298b27d0874 1,4,7-8,12,19,21-25,29
+  s_fb96c66c22450a::t_4aac72a7ab954b 30
+CHANGELOG.md
+  s_fb96c66c22450a::t_a7bdd5ebb1e4d0 21-22
+src/dream.ts
+  s_fb96c66c22450a::t_c53f63ed1f8679 121
+  s_fb96c66c22450a::t_4af4f3db544f36 109-110,112
+  s_fb96c66c22450a::t_053c54c7bb100f 128
+  s_fb96c66c22450a::t_7507a38a5162e1 5,7
+  s_fb96c66c22450a::t_afbda0e5b29ff1 18
+src/cli/retro.ts
+  s_fb96c66c22450a::t_ef1f78114fe5e0 5
+  s_fb96c66c22450a::t_b876f8191b374f 46
+  s_fb96c66c22450a::t_d4fe42b143b49a 38
+  s_fb96c66c22450a::t_e51d341d77b43b 32
+  s_fb96c66c22450a::t_e894410ab6c837 13,16,20-26
+src/cli/flags.ts
+  s_fb96c66c22450a::t_7e3daf7cb63152 1-17
+.github/workflows/ci.yml
+  s_fb96c66c22450a::t_efe01f3e4ff12d 23-26
+test/tools.ts
+  s_fb96c66c22450a::t_9c6872feab8e99 62,65,68
+package.json
+  s_fb96c66c22450a::t_31e7decfd6b951 17-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9ddcbc231024f15a945c6773280c8706f4fda510",
+  "prompts": {},
+  "sessions": {
+    "s_fb96c66c22450a": {
+      "agent_id": {
+        "tool": "windsurf",
+        "id": "determined-candytuft",
+        "model": "unknown"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
