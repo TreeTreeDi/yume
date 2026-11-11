@@ -1,0 +1,27 @@
+package.json
+  s_d67abe6f59576e::t_de81e32aafb83f 11,19
+.github/workflows/ci.yml
+  s_d67abe6f59576e::t_de81e32aafb83f 27
+src/cli/transcripts.ts
+  s_d67abe6f59576e::t_de81e32aafb83f 1-71
+CHANGELOG.md
+  s_d67abe6f59576e::t_de81e32aafb83f 23
+test/transcripts.ts
+  s_d67abe6f59576e::t_de81e32aafb83f 1-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "386290c53da1d854503653fa93738d8183c4c615",
+  "prompts": {},
+  "sessions": {
+    "s_d67abe6f59576e": {
+      "agent_id": {
+        "tool": "windsurf",
+        "id": "historical-prune",
+        "model": "unknown"
+      },
+      "human_author": "huaiju <huaiju1210085279@gmail.com>"
+    }
+  }
+}
