@@ -8,6 +8,7 @@
     "dream": "tsx src/cli/dream.ts",
     "config": "tsx src/cli/config.ts",
     "retro": "tsx src/cli/retro.ts",
+    "transcripts": "tsx src/cli/transcripts.ts",
     "assert": "tsx test/assertions.ts",
     "test:parsers": "tsx test/parsers.ts",
     "test:tui": "tsx test/tui.ts",
@@ -15,6 +16,7 @@
     "test:tools": "tsx test/tools.ts",
     "test:config": "tsx test/config.ts",
     "test:retro": "tsx test/retro.ts",
+    "test:transcripts": "tsx test/transcripts.ts",
     "test:distill": "tsx test/distill.ts"
   },
   "dependencies": {

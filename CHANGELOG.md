@@ -20,6 +20,7 @@ All notable changes to Yume are recorded here. The file is the timeline `AGENTS.
 - `.pi/` goal runtime state and `.DS_Store` are untracked and ignored; they no longer ship in the integration branch (2026-11-10).
 - Review fixes: `createMastra` and `DreamInput` require a `ResolvedConfig`, so nothing below the CLI boundary re-reads env or the config file. The write quota resets at `runDream` start instead of inside `createMastra`. Oversized tool payloads that fit few lines are byte-pruned instead of returned whole. `yume retro --check` accepts `--retro-min-sessions` / `--retro-min-bytes`. CLI flag parsing shares `src/cli/flags.ts`, and `config show --json` reports `configFile: null` when no file exists (2026-11-10).
 - `test:distill` is registered and CI runs `test:distill`, `test:tools`, `test:config`, and `test:retro` (2026-11-10).
+- `yume transcripts` prints rendered session text for external retro agents. Inputs match `yume dream` (positional paths or `--transcripts <dir>`); `--since` filters by session `createdAt`. Output is distilled by default; `--raw` prints the unpruned render. Read-only, no model calls (#28, 2026-11-10).
 - Add research doc on Grok Build's memory subsystem (write-index-readback loop, dream consolidation risks, v2 topic architecture) and its gap against Yume in `docs/research/grok-build-memory-analysis.md` (2026-11-10).
 
 ## 0.1.0 - 2026-11-08
