@@ -1,0 +1,107 @@
+# Grok Build 记忆系统源码调研与 Yume 差距分析
+
+> 调研目标：以源码为准梳理 Grok Build 跨 session 记忆子系统的写-索引-读回闭环与产品逻辑，对照 Yume 现状给出差距清单与落地建议。
+> 证据基线：本机镜像 `/Users/mac/workspace/projects/grok-build`（SOURCE_REV `9dccd1f00ec13332134a37750b64c047b14dc120`）；`~/.grok/` 下真实产物（v1 `memory/`、v2 `memory-v2/`、`memtrace/`）；x.ai 官方说明 `x.ai/news/grok-build-memory` 与 `docs.x.ai/build/settings/reference`。第三方源码分析 Agent Memory Atlas（`neoneye.github.io/agent-memory-atlas/systems/grok-build/`，分析 pin `37949780`）作为二手来源，仅用于佐证与补充 v2（本镜像无 v2 代码）。
+
+---
+
+## 1. 总览：记忆是一个闭环产品
+
+Grok Build 的记忆集中在 `crates/codegen/xai-grok-memory`（约 12k 行、315+ `#[test]`），shell 侧 glue 在 `crates/codegen/xai-grok-shell/src/session/`。默认关闭，开启链 `env GROK_MEMORY` → `--experimental-memory/--no-memory` → `[memory] enabled` → 服务端 feature flag → 默认 false（`xai-grok-config-types/src/memory.rs:606-613`）。`--no-memory` 优先级最高。
+
+产品叙事（官方）：工作时后台记笔记，回到项目时读回；记的是约定、决策、项目事实；任务状态、暂定结论、secret、仓库已覆盖的内容不记。
+
+三个作用域，地位不平等：
+
+| Scope | 位置 | 性质 | 衰减 |
+|---|---|---|---|
+| global | `~/.grok/memory/MEMORY.md` | 人工/用户策划，跨 workspace 共享 | evergreen，不衰减不标注 |
+| workspace | `~/.grok/memory/{slug}-{blake3(cwd)[..8]}/MEMORY.md` | dream 写入的策划层 | evergreen |
+| session | `{ws}/sessions/YYYY-MM-DD-{slug}-{sid8}.md` | 原始观察日志 | 排名衰减 + 注入时标年龄 |
+
+workspace 目录名优先取 git `origin` remote 归一化为 `org/repo`（`storage.rs:651-690`），所以同一仓库的 clone/worktree 共享一份记忆；临时 cwd（temp 目录）整体跳过写（`storage.rs:583-598`）。
+
+设计取向：**markdown 是事实源，SQLite 只是派生索引**。人可以直接编辑任何文件，watcher 会重索引外部改动。
+
+## 2. 写路径：四条触发，模型无权写记忆
+
+模型只有两个只读工具 `memory_search` / `memory_get`（`xai-grok-tools/src/implementations/memory/`）。所有写入由 harness 发起：
+
+1. **compaction 前 flush（主路径）**：token 逼近阈值（默认窗口 -4000 headroom）时，独立一次性 LLM 调用总结最近 ~20 条对话（`flush.rs:23-84`、`memory_dream.rs:434-715`）。响应须含 `##` 头、≤8000 字符、`NO_REPLY` 允许跳过；再做语义去重（embedding cosine > 0.92 丢弃，`flush.rs:186`）。结果 append 到当日 session 日志。
+2. **空闲 flush**：300s 无活动且对话有新增（`run_loop.rs:300-343`）。
+3. **session 结束摘要**：无 LLM，写消息计数 + ≤5 个用户话题的元数据（`hooks.rs:99-141`）；≥3 条真实 user prompt 且 ≥50 query 字节才写，subagent 跳过。
+4. **手动**：`/flush`、pager 侧 `/remember`（可选 LLM 改写后进 global，`memory_dream.rs:737-836`）。
+
+v1 的 flush prompt 明确排除项：用户偏好归 global 不写进 session 日志；瞬时进度不写；routine 任务回复 `NO_REPLY`。
+
+## 3. 索引与检索
+
+每 workspace 一个 `index.sqlite`（schema 本机已用 `sqlite3 -readonly` 实证）：
+
+- `meta(key,value)`：schema 版本、embedding 维度、`reindex_claim`（多进程令牌 `{pid}:{epoch}`，`index.rs:587-616`）。
+- `chunks`：`id="{path}:{i}"`、行区间、`text` 原文、blake3 `hash`（增量重索引的变更基元）、`source ∈ {global,workspace,session}`、`created_at/updated_at/access_count/last_accessed`。
+- `chunks_fts`：contentless FTS5。`chunks_vec`：`vec0(embedding FLOAT[1024])`，仅当 sqlite-vec 加载成功；否则整体降级纯 FTS 且 `text_weight` 强制 1.0（`index.rs:133-146`）。
+
+检索 `hybrid_search`（`search.rs:195-427`）八步：关键词扩展（~150 词 stop list）→ FTS BM25 → 向量 KNN → 按 chunk_id 归并归一 → 丢弃 content-free chunk（脚手架 stub）→ **仅 session 源**做时序衰减 `e^(−ln2·age/30d)` → source 权重 + 访问频次 boost + min_score 过滤 → MMR(Jaccard, λ=0.7) → 截断。另有补充查询限定 `source IN (global,workspace)` 保证策划记忆不被 session 日志挤掉（`search.rs:203-215`）。
+
+分块按 `##` 边界→段落→行（`chunker.rs`），默认 `max_chunk_chars=1600`、`overlap=320`。
+
+## 4. 读回注入：三个入口 + KV cache 设计
+
+- **首轮自动注入**：每进程一次，query 取最后一条真实 user query（问候/过短则回退固定词），默认 `min_score=0.9`，格式化为 `<memory-context>` 块插入**首条 system message**（`turn.rs:1758-1879`、`memory_context.rs:32-64`、`request_builder.rs:189-229`）。
+- **KV cache 保前缀**：块持久化进历史，后续轮次逐字节复用不重搜——代码注释原话 "a re-scored block would mutate the system-prompt prefix and bust the KV cache for the whole downstream conversation"（`memory_context.rs:14-17`）。代价被明说：注入内容钉死在首轮相关性上。
+- **compaction 后重注入**：`CompactionRecovery` 以 `last_user_query` 重搜并附进 compaction system-reminder（`compaction.rs:1461-1556`）。
+- **staleness 标注**（`xai-grok-tools/src/types/memory_backend.rs:27-53`）：session 源 `created_at` 距今 >1 天渲染 `**Note ({age}):** Verify this is still current.`，>7 天渲染 `**Stale ({age}):** Verify current state before relying on this.`；global/workspace 恒豁免。标注是渲染层而非存储字段——不能被查询过滤，但它出现在模型做信任判断的那个位置。
+
+## 5. Dream 合并：闭环里最危险的一段
+
+闸门最便宜优先：enabled → 距 `.dream-lock` mtime ≥24h → session 日志 ≥5 篇（`dream.rs:40-78`、`dream_lock.rs:155-193`）。周期定时器 / session 结束 / `/dream` 手动三触发。
+
+流程：取 DreamLock（PID + 陈旧回收 + 写失败回滚）→ 现有 MEMORY.md + 各 session 日志装进 ≤32k 字符的 user message → 模型 merge（解冲突、日期绝对化、丢弃 ephemeral；可答 `NO_REPLY`）→ 校验非空/非 NO_REPLY/含 markdown 头 → **超 16k 字符直接 `chars().take()` 截断** → 整文件覆写 workspace MEMORY.md → **删除被读过的 session 日志**（5 分钟内修改的跳过）→ 索引 purge + 重嵌。
+
+已知缺陷（源码 + Atlas 双重确认）：
+
+- 截断发生在文档中段，覆写的是累积记忆，**无版本无备份**；merge 质量只靠 prompt 里一句"merge rather than replace"。
+- 证据随删：日志删掉后，被截掉的尾部知识无法重建。
+- `grok memory clear --global` 只删 `MEMORY.md` 文件，不打开任何 index——global 全文以 `source="global"` 冗余在每个 workspace 的 `chunks.text` 里，直到手动 `reindex` 才清。
+
+值得肯定的配套：只删真正被读进 32k 窗口的 stem；写失败锁回滚；`NO_REPLY` 让空跑 dream 可以合法不写；`gc` 只清空的 tmp 目录和过期空目录，非空目录永不触碰（`storage.rs:454-508`）。
+
+## 6. v2 管线（新二进制，未进本镜像）
+
+本机 `~/.grok/memory-v2/` 实证布局：`global/` 与 `workspaces/{slug}-{hash8}/` 各含 `MEMORY.md`（**生成式索引**，头部标 "Generated by Grok. Do not edit"，正文是 `## Topics` 列表）、`topics/*.md` 主题文件、`observations/_inbox/` 不可变观察、`memory_state.sqlite` 状态库。
+
+按 Atlas（pin `37949780`）：manifest ≤8KiB、≤64 条目，session 启动和 compaction 后注入 prompt；模型直接读写 topic/inbox 文件，经 `V2MemoryAccessPolicy`（拒相对路径/穿越/符号链接/越界，替换前校验读取快照）。v1 的 flush/dream/session-save/上传在 v2 全关。durable capture 队列 `v2_capture.rs`（1344 行 25 测试）在该 pin 尚无调用方——v2 记忆此时只靠模型主动编辑变更。
+
+**方向信号**：v2 把 MEMORY.md 从"内容文档"改成"注入用索引"，知识沉到 topic 文件——向 Yume 的 `_index.md` + Analyzer 直写模式收敛。
+
+## 7. Grok vs Yume 差距对照
+
+| 维度 | Grok Build | Yume 现状 | 判断 |
+|---|---|---|---|
+| 读回注入 | 工具 + 首轮自动注入 + compaction 后重注入，KV-cache 感知 | 无，write-only | 最大缺口 |
+| 检索 | FTS5 + 向量混合 + 衰减 + MMR + access boost | 无索引 | 缺口 |
+| 捕获时机 | compaction 前 / 空闲 300s / 结束 / 手动 | 手动 `dream`；`retro --check` 只报 ready | 缺口 |
+| Scope | 三层 + git remote 归键 | 单一 `--memory` 目录 | 缺口 |
+| 新鲜度表达 | session 注入标年龄 + 排名衰减 | 无读取端 | 依赖读路径先落地 |
+| 冲突处理 | 破坏性 merge，败方无痕 | `CONFLICT:` 双方保留 + 日期来源 | Yume 更保守，优势 |
+| 证据链 | dream 后删日志，无回溯 | transcript 不可变 + 跑前整目录备份；provenance 仅惯例 | Yume 半步领先 |
+| 写入安全 | read_file 规范化 + TOCTOU 注释；v2 快照校验 | 工具 resolve/inside 限制 + transcript 只读 + 写配额 | 相当 |
+| 运维 | doctor / reindex / clear / watcher / GC / archive 上传 | 备份目录 + dream-report | 缺口 |
+| 去重 | flush 语义去重 cosine 0.92 | 无 | 小缺口 |
+| 测试规模 | 315+ crate 测试含负向断言 | 行为断言 + 单测 | 数量差 |
+
+## 8. 落地建议（按收益排序）
+
+1. **先补读路径**（本仓 `docs/research/cross-harness-memory-injection.md` 已有设计）：`yume mcp` 暴露 `recall_facts`/`query_decisions` 主动 pull + dream 后同步 Top N 进 AGENTS.md `<!-- YUME_MEMORY_START/END -->` 区块。两步独立，任选其一先落地。这是唯一解锁其余价值的缺口。
+2. **索引 SQLite FTS5 起步**，向量可选降级——与 grok 降级设计和 `hindsight-architecture-analysis.md` 的推荐一致；不引入常驻服务。
+3. **注入侧抄两个细节**：检索结果渲染年龄标注（Yume 已有日期惯例，成本只在注入层）；注入块固定在首条 system message 保 KV 前缀，并接受"钉在首轮相关性"的取舍。
+4. **触发自动化**：exit hook 派生 dream + 启动水位线补偿检查，`retro --check` 的阈值逻辑直接复用（`auto-retro-orchestration.md` 已设计）。
+5. **不抄 dream 覆写+删源**：Yume 的备份+增量整理+transcript 不可变更稳；把 provenance 从惯例升级为 fact fingerprint + transcript offset（auto-retro 文档有设计稿）。
+6. **scope 留到确有需求**：grok 的 git-remote 归键解决的是多 worktree 共享，Yume 单目录够用时不急做。
+
+## 9. Caveat
+
+- 本镜像 SOURCE_REV `9dccd1f0` 无 v2 代码，`prompt.md` 也无 memory 块；`~/.grok/memory-v2/` 是更新二进制所写。v2 描述来自磁盘实证 + Atlas 的更新 pin，未经本镜像源码核实。
+- Atlas 为二手来源；凡与本镜像冲突处以源码为准（如 `grok memory` 子命令：镜像内只有 `clear`，README 提到的 `edit|stats|doctor` 不在此树）。
+- staleness 阈值（1d/7d）、半衰期 30d、各 min_score 均为代码常量/默认值，是否可调见 `xai-grok-config-types/src/memory.rs`。
